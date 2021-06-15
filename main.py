@@ -24,4 +24,4 @@ async def on_ready():
 
 
 if __name__ == "__main__":
-    bot.run(bot.setting["TOKEN"])
+    bot.run(bot.setting["DC_TOKEN"])

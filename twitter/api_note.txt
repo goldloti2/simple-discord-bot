@@ -1,0 +1,74 @@
+Just some note, doesn't include everything
+
+search user id:
+	https:// api.twitter.com/2/users/by
+	params:
+		(required)
+		usernames:
+				usernames seperate by ','
+		(optional)
+		user.fields:
+				enum {created_at,
+					description,
+					entities,
+					id,
+					location,
+					name,
+					pinned_tweet_id,
+					profile_image_url,
+					protected,
+					public_metrics,
+					url,
+					username,
+					verified,
+					withheld}
+
+
+find user's tweet (timelines):
+	https:// api.twitter.com/2/users/{id}/tweets
+	{id}: require user id
+	params:(optional)
+		end_time:
+				format: YYYY-MM-DDTHH:mm:ssZ (ISO 8601/RFC 3339) ex.2010-11-06T00:00:01Z
+				find tweets before end_time
+		start_time:
+				format: YYYY-MM-DDTHH:mm:ssZ (ISO 8601/RFC 3339) ex.2010-11-06T00:00:01Z
+				find tweets after start_time
+		until_id:
+				tweet id
+				find tweets before this tweet id (this tweet not included)
+		since_id:
+				tweet id
+				find tweets after this tweet id (this tweet not included)
+		exclude:
+				enum{retweets, replies}
+		max_results:
+				integer how many tweet try to get, 5~100, default 10
+
+
+recent search:
+	https:// api.twitter.com/2/tweets/search/recent
+	params:
+		(required)
+		query:
+			query string
+			some tips:
+				from:{username}
+				-is:retweet
+		(optional)
+		end_time:
+				format: YYYY-MM-DDTHH:mm:ssZ (ISO 8601/RFC 3339) ex.2010-11-06T00:00:01Z
+				find tweets before end_time
+		start_time:
+				format: YYYY-MM-DDTHH:mm:ssZ (ISO 8601/RFC 3339) ex.2010-11-06T00:00:01Z
+				find tweets after start_time
+		until_id:
+				tweet id
+				find tweets before this tweet id (this tweet not included)
+		since_id:
+				tweet id
+				find tweets after this tweet id (this tweet not included)
+		max_results:
+				integer how many tweet try to get, 5~100, default 10
+		user.fields:
+				need to add "expansions: author_id" as parameter to activate
