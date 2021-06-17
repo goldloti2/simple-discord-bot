@@ -13,7 +13,7 @@ def auth():
 def create_url():
     # Replace with user ID below
     user_id = 2244994945
-    return "https://api.twitter.com/2/users/{}/tweets".format(user_id)
+    return "https://api.twitter.com/2/users/{}/tweets".format("1283653858510598144")
 
 
 def get_params():
@@ -24,7 +24,7 @@ def get_params():
     # in_reply_to_user_id, lang, non_public_metrics, organic_metrics,
     # possibly_sensitive, promoted_metrics, public_metrics, referenced_tweets,
     # source, text, and withheld
-    return {"since_id": "1397253448538607617", "tweet.fields": "created_at"}
+    return {"since_id": "1397253448538607617", "tweet.fields": "created_at", "exclude": "retweets"}
 
 
 def create_headers(bearer_token):

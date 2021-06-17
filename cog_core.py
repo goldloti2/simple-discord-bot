@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import os
+from utils import print_cmd
 
 def ext_str(exts):
     return f"cmds.{exts}"
@@ -29,6 +30,7 @@ class Cog_Core(commands.Cog):
     
     @commands.command()
     async def load(self, ctx, *args):
+        print_cmd("load", args, ctx)
         if len(args) == 0:
             await ctx.send(":x:What extension you want to load???")
         else:
@@ -58,9 +60,11 @@ class Cog_Core(commands.Cog):
             for msg, exts in zip(msgs_stat, exts_stat):
                 send_msg = create_msg(send_msg, msg, exts)
             await ctx.send(send_msg)
+            print(send_msg)
 
     @commands.command()
     async def unload(self, ctx, *args):
+        print_cmd("unload", args, ctx)
         if len(args) == 0:
             await ctx.send(":x:What extension you want to unload???")
         else:
@@ -86,9 +90,11 @@ class Cog_Core(commands.Cog):
             for msg, exts in zip(msgs_stat, exts_stat):
                 send_msg = create_msg(send_msg, msg, exts)
             await ctx.send(send_msg)
+            print(send_msg)
 
     @commands.command()
     async def reload(self, ctx, *args):
+        print_cmd("reload", args, ctx)
         if len(args) == 0:
             await ctx.send(":x:What extension you want to reload???")
         else:
@@ -118,11 +124,15 @@ class Cog_Core(commands.Cog):
             for msg, exts in zip(msgs_stat, exts_stat):
                 send_msg = create_msg(send_msg, msg, exts)
             await ctx.send(send_msg)
+            print(send_msg)
     
     @commands.command()
     async def update_cogs(self, ctx):
+        print_cmd("update_cogs", [], ctx)
         self.check_cmds()
-        await ctx.send(f"Find {len(self.list_exts)} extension: __{'__, __'.join(self.list_exts)}__")
+        message = f"Find {len(self.list_exts)} extension: __{'__, __'.join(self.list_exts)}__"
+        await ctx.send(message)
+        print(message)
 
 
 def setup(bot):

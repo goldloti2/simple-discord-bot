@@ -10,7 +10,7 @@ search_url = "https://api.twitter.com/2/tweets/search/recent"
 
 # Optional params: start_time,end_time,since_id,until_id,max_results,next_token,
 # expansions,tweet.fields,media.fields,poll.fields,place.fields,user.fields
-query_params = {'query': '#EnjoyHoloMaripa -is:retweet',"expansions": "author_id",'tweet.fields': 'author_id,created_at','user.fields': 'username'}
+query_params = {'query': '#EnjoyHoloMaripa -is:retweet',"expansions": "author_id",'tweet.fields': 'created_at','user.fields': 'username'}
 
 
 def create_headers(bearer_token):

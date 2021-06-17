@@ -10,8 +10,8 @@ Just a simple discord bot that can search and push twitter message on your disco
 Python version: 3.8.2 (should be working on 3.5 or later)  
 Python 版本:3.8.2 (3.5之後的應該也可以)  
   
-Package required: discord.py, requests  
-Package需求: discord.py, requests  
+Package required: discord.py, requests, json  
+Package需求: discord.py, requests, json  
   
 or just run following commands:  
 或是直接執行下列命令:  
@@ -56,7 +56,26 @@ and fill in the required contents
 	- just a dumb cog.py
   
 2021/06/15
-- Change Twitter api library from searchtweets to requests *(Since we just need some http requests!)*
+- Change Twitter api library from searchtweets to requests *(Since we just need http requests!)*
 - tools/gen_setting.py:
 	- generate setting.json
 - add some twitter api sample codes in twitter/sample
+  
+2021/06/17
+- Now recieved commands and the response will print on the console
+- Modified gen_setting.py to save Twitter bearer token in setting.json
+- Rename some functions, variables, and keywords
+- Working on Twitter-associate classes
+	- Twitter-api ends (in twitter dir) finished but not tested yet
+	- Discord-bot ends (cmds/twitter.py) still in progress
+- utils.py
+	- added function - print_cmd()
+- cmds/test.py
+	- Modified as a cog for testing async and requests
+	- modified command - pong()
+	- added command - pong2()
+	- added function - request_url()
+- cmds/twitter.py
+	- Still in progress
+- twitter/twitter_class.py
+	- added class - Twitter_Class(), Twitter_Timeline(), Twitter_Recent()

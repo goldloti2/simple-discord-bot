@@ -14,7 +14,7 @@ def create_url():
     # Specify the usernames that you want to lookup below
     # You can enter up to 100 comma-separated values.
     usernames = "usernames=TwitterDev,TwitterAPI"
-    user_fields = "user.fields=description,created_at"
+    user_fields = "user.fields=description,created_at,url"
     # User fields are adjustable, options include:
     # created_at, description, entities, id, location, name,
     # pinned_tweet_id, profile_image_url, protected,
