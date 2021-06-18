@@ -14,7 +14,7 @@ def save_json(data, file = SETTING_FILE):
 
 def print_cmd(cmd, args, ctx):
     t = time.strftime("%Y/%m/%d %H:%M:%S", time.localtime())
-    print(f"[{t}] {cmd} {' '.join(args)}, from {ctx.channel}")
+    print(f"[{t}] {cmd} {args}, from {ctx.channel}")
 
 def parse_twitter_msg(isotime, username, id):
     timestr = time.strptime(isotime, "%Y-%m-%dT%H:%M:%S.000Z")

@@ -6,13 +6,14 @@ from utils import save_json, print_cmd
 
 class Misc(commands.Cog):
     def __init__(self, bot):
+        print("load misc")
         self.bot = bot
     
     @commands.command()
     async def ping(self, ctx, *args):
         print_cmd("ping", args, ctx)
         message = f"{self.bot.latency * 1000:.3f} ms, "
-        message = message + f"@{ctx.channel}(#{ctx.channel.id})\n"
+        message = message + f"{ctx.channel}@<#{ctx.channel.id}>(#{ctx.channel.id})\n"
         message = message + f"{len(args)} arguments: {', '.join(args)}"
         await ctx.send(message)
         print(message)

@@ -7,8 +7,8 @@ Just a simple discord bot that can search and push twitter message on your disco
 - Load/Unload Cogs
 
 ## Python Environment Setup
-Python version: 3.8.2 (should be working on 3.5 or later)  
-Python 版本:3.8.2 (3.5之後的應該也可以)  
+Python version: 3.8.2  
+Python 版本: 3.8.2  
   
 Package required: discord.py, requests, json  
 Package需求: discord.py, requests, json  
@@ -76,6 +76,17 @@ and fill in the required contents
 	- added command - pong2()
 	- added function - request_url()
 - cmds/twitter.py
-	- Still in progress
+	- Everything still in progress
+	- added command - subscribe_user(), subscribe_search()
 - twitter/twitter_class.py
 	- added class - Twitter_Class(), Twitter_Timeline(), Twitter_Recent()
+  
+2021/06/18
+- Fix some bugs in cmds/twitter.py and twitter/twitter_class.py
+- Add more bugs in cmds/twitter.py
+- Change some console messages
+- cmds/twitter.py
+	- fixed \_\_init\_\_()
+	- fixed command - subscribe_user(), subscribe_search()
+	- added command - update(), subscribed()
+	- added function - call\_update() _(some bugs inside)_

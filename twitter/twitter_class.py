@@ -3,8 +3,10 @@ import json
 import asyncio
 from utils import parse_twitter_msg
 
-url_factory = {"user": "https://api.twitter.com/2/users/by?",
-               "timeline": "https://api.twitter.com/2/users/%s/tweets",
+import warnings
+warnings.filterwarnings("ignore", category = RuntimeWarning)
+
+url_factory = {"timeline": "https://api.twitter.com/2/users/%s/tweets",
                "recent": "https://api.twitter.com/2/tweets/search/recent"}
 
 class Twitter_Class():
@@ -25,6 +27,7 @@ class Twitter_Class():
         loop = asyncio.get_running_loop()
         response = loop.run_in_executor(None, req)
         if response.status_code != 200:
+            print(self.console_msg + ":" + response.status_code)
             return
         messages = self.response_proc(response.json())
         if self.ini == True:
@@ -32,17 +35,19 @@ class Twitter_Class():
             return
         for msg in messages:
             await self.channel.send(msg)
+            print(self.console_msg + "\n" + msg)
 
 
 
 class Twitter_Timeline(Twitter_Class):
     def __init__(self, username, id, headers, channel):
-        super.__init__(self, "timeline", headers, channel)
+        super().__init__("timeline", headers, channel)
         self.url = self.url % id
         self.username = username
         self.params = {"exclude": "retweets",
                        "max_results": 50,
                        "tweet.fields": "created_at"}
+        self.console_msg = f"@{username} in {channel}"
         self.request()
     
     def response_proc(self, response):
@@ -59,13 +64,14 @@ class Twitter_Timeline(Twitter_Class):
 
 class Twitter_Recent(Twitter_Class):
     def __init__(self, query, headers, channel):
-        super.__init__(self, "recent", headers, channel)
+        super().__init__("recent", headers, channel)
         self.query = query
         self.params = {"query": query,
                        "max_results": 50,
                        "tweet.fields": "author_id,created_at",
                        "expansions": "author_id",
                        "user.fields": "username"}
+        self.console_msg = f"\"{query}\" in {channel}"
         self.request()
     
     def response_proc(self, response):

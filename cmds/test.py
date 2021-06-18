@@ -17,6 +17,7 @@ to the loop
 
 class Test(commands.Cog):
     def __init__(self, bot):
+        print("load test")
         self.bot = bot
     
     @commands.command()
@@ -30,16 +31,21 @@ class Test(commands.Cog):
         message = f"end time: {time.time() - start_time:.5f} sec. {id(self.loop)}"
         await ctx.send(message)
         print(message)
+        await self.call_pong2(ctx)
     
     @commands.command()
     async def pong2(self, ctx):
         print_cmd("pong", [], ctx)
         start_time = time.time()
         self.loop = asyncio.get_running_loop()
-        tasks = [self.loop.create_task(self.request_url(i, start_time, ctx))\
-                for i in range(5)]
-        #await asyncio.wait(tasks)
+        for i in range(5):
+            self.loop.create_task(self.request_url(i, start_time, ctx))
         message = f"end time: {time.time() - start_time:.5f} sec. {id(self.loop)}"
+        await ctx.send(message)
+        print(message)
+    
+    async def call_pong2(self, ctx):
+        message = "This is pong2()"
         await ctx.send(message)
         print(message)
     

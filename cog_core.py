@@ -15,6 +15,7 @@ def create_msg(msg, head, set_exts):
 
 class Cog_Core(commands.Cog):
     def __init__(self, bot):
+        print("load cog_core")
         self.bot = bot
         self.check_cmds()
         for exts in self.list_exts:
