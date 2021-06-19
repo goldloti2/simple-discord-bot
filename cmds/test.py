@@ -1,12 +1,11 @@
 import discord
 from discord.ext import commands
 import json
-import os
 import asyncio
 import requests
 import time
-from utils import print_cmd
 
+from log import logger, print_cmd, send_msg
 '''
 * Both asyncio.ensure_future() and loop.create_task() will add the coroutines
 to the loop
@@ -17,7 +16,7 @@ to the loop
 
 class Test(commands.Cog):
     def __init__(self, bot):
-        print("load test")
+        logger.info("load test")
         self.bot = bot
     
     @commands.command()
@@ -29,35 +28,32 @@ class Test(commands.Cog):
                 for i in range(5)]
         #await asyncio.wait(tasks)
         message = f"end time: {time.time() - start_time:.5f} sec. {id(self.loop)}"
-        await ctx.send(message)
-        print(message)
+        await send_msg("pong", message, ctx)
         await self.call_pong2(ctx)
     
     @commands.command()
     async def pong2(self, ctx):
-        print_cmd("pong", [], ctx)
+        print_cmd("pong2", [], ctx)
         start_time = time.time()
         self.loop = asyncio.get_running_loop()
         for i in range(5):
             self.loop.create_task(self.request_url(i, start_time, ctx))
         message = f"end time: {time.time() - start_time:.5f} sec. {id(self.loop)}"
-        await ctx.send(message)
-        print(message)
+        await send_msg("pong2", message, ctx)
     
     async def call_pong2(self, ctx):
         message = "This is pong2()"
-        await ctx.send(message)
-        print(message)
+        await send_msg("call_pong2()", message, ctx)
     
     async def request_url(self, num, start_time, ctx):
         url = 'https://www.google.com.tw/search'
         t = time.time()
         message = f"#{num}: Request at {t - start_time:.5f} sec.\n"
         res = await self.loop.run_in_executor(None, lambda: requests.get(url, params = {"q": "python"}))
+        message = f"{message}{type(res)}\n"
         t = time.time()
         message = f"{message}#{num}: Response at {t - start_time:.5f} sec."
-        await ctx.send(message)
-        print(message)
+        await send_msg("request_url()", message, ctx)
 
 
 def setup(bot):

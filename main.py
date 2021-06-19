@@ -1,13 +1,8 @@
 import discord
 from discord.ext import commands
-import json
-import os
-import time
-from log import start_logging
+from log import logger
 from utils import load_json
 
-
-logger = start_logging("discord", "log/discord", debug = True)
 
 setting = load_json()
 
@@ -19,13 +14,14 @@ bot.setting = setting
 async def on_ready():
     game = discord.Game(bot.setting["GAME"])
     await bot.change_presence(status=discord.Status.idle, activity=game)
-    bot.load_extension("cog_core")
-    t = time.strftime("%Y/%m/%d %H:%M:%S", time.localtime())
-    print(f'[{t}] logged in as {bot.user}')
+    try:
+        bot.load_extension("cog_core")
+    except commands.errors.ExtensionAlreadyLoaded:
+        pass
+    logger.info("logged in as {bot.user}")
 
 
 
 if __name__ == "__main__":
-    t = time.strftime("%Y/%m/%d %H:%M:%S", time.localtime())
-    print(f"[{t}] bot start...")
+    logger.info("bot start...")
     bot.run(bot.setting["DC_TOKEN"])

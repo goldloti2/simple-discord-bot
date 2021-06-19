@@ -3,13 +3,15 @@ from discord.ext import commands
 import json
 import asyncio
 import requests
-from utils import load_json, save_json, print_cmd
+from utils import load_json, save_json
 from twitter.twitter_class import Twitter_Timeline, Twitter_Recent
+
+from log import logger, print_cmd, send_msg
 
 
 class Twitter(commands.Cog):
     def __init__(self, bot):
-        print("load twitter")
+        logger.info("load twitter")
         self.bot = bot
         self.json_path = "settings/subscribe.json"
         self.__headers = {"Authorization": f"Bearer {self.bot.setting['TWITTER_TOKEN']}"}
@@ -46,8 +48,9 @@ class Twitter(commands.Cog):
             sub_json["query"].remove(rm)
         
         self.sub_json = sub_json
-        self.users = users
-        self.queries = queries
+        self.TW_obj = {}
+        self.TW_obj["users"] = users
+        self.TW_obj["queries"] = queries
     
     @commands.command(aliases = ["sub_user", "su", "SU"])
     async def subscribe_user(self, ctx, args):
@@ -55,8 +58,7 @@ class Twitter(commands.Cog):
         for exist_user in self.sub_json["user"]:
             if exist_user["username"] == args:
                 message = f":x:The user @{args} already subscribed at <#{exist_user['ch_id']}>"
-                await ctx.send(message)
-                print(message + f"({self.bot.get_channel(exist_user['ch_id'])})")
+                await send_msg("subscribe_user", message, ctx)
                 return
         
         user_fields = "user.fields=id,name"
@@ -65,22 +67,21 @@ class Twitter(commands.Cog):
         response = requests.get(url, headers = self.__headers)
         if response.status_code != 200:
             message = f":x:Can't find the user @{args}"
-            await ctx.send(message)
-            print(message)
+            await send_msg("subscribe_user", message, ctx)
             return
         response = response.json()["data"][0]
         user = {"username": args,
                 "id": response["id"],
                 "ch_id": ctx.channel.id}
-        print(f"add user: @{args}, in {ctx.channel}")
+        new_obj = Twitter_Timeline(user["username"],
+                                   user["id"],
+                                   self.__headers,
+                                   ctx.channel)
+        logger.info(f"add user: @{args}, in {ctx.channel}")
         self.sub_json["user"].append(user)
-        self.users.append(Twitter_Timeline(user["username"],
-                                           user["id"],
-                                           self.__headers,
-                                           ctx.channel))
+        self.TW_obj["users"].append(new_obj)
         message = f":white_check_mark:Subscribed: {response['name']}@{args}\n{home_url}"
-        await ctx.send(message)
-        print(message)
+        await send_msg("subscribe_user", message, ctx)
         save_json(self.sub_json, self.json_path)
     
     @commands.command(aliases = ["sub_search", "ss", "SS", "subscribe_query", "sq", "SQ"])
@@ -88,14 +89,14 @@ class Twitter(commands.Cog):
         print_cmd("subscribe_search", args, ctx)
         query = {"query": args,
                  "ch_id": ctx.channel.id}
-        print(f"add query: \"{args}\", in {ctx.channel}")
+        new_obj = Twitter_Recent(query["query"],
+                                 self.__headers,
+                                 ctx.channel)
+        logger.info(f"add query: \"{args}\", in {ctx.channel}")
         self.sub_json["query"].append(query)
-        self.queries.append(Twitter_Recent(query["query"],
-                                           self.__headers,
-                                           ctx.channel))
+        self.TW_obj["queries"].append(new_obj)
         message = f":white_check_mark:subscribed: \"{args}\""
-        await ctx.send(message)
-        print(message)
+        await send_msg("subscribe_search", message, ctx)
         save_json(self.sub_json, self.json_path)
     
     @commands.command(aliases = ["U"])
@@ -104,8 +105,8 @@ class Twitter(commands.Cog):
         await self.call_update()
     
     async def call_update(self):
-        for sub_type in self.sub_json:
-            for sub in self.sub_json[sub_type]:
+        for sub_type in self.TW_obj:
+            for sub in self.TW_obj[sub_type]:
                 asyncio.ensure_future(sub.request())
     
     @commands.command(aliases = ["sub", "s", "S"])
@@ -123,8 +124,7 @@ class Twitter(commands.Cog):
             line = f"\"{query['query']}\""
             message = message + f"{i:>7} {line:<35} #{channel}\n"
         message = message + "```"
-        await ctx.send(message)
-        print(message)
+        await send_msg("subscribed", message, ctx)
 
 
 def setup(bot):

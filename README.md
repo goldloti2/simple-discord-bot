@@ -90,3 +90,12 @@ and fill in the required contents
 	- fixed command - subscribe_user(), subscribe_search()
 	- added command - update(), subscribed()
 	- added function - call\_update() _(some bugs inside)_
+  
+2021/06/19
+- Fix known bugs in cmds/twitter.py and twitter/twitter_class.py
+- Replace simple print() with own logger
+- Try to handle potential exceptions (but cannot figure out how to catch ctrl-c)
+- utils.py
+	- removed function - print_cmd()
+- log.py
+	- added function - print_cmd(), send_msg()
