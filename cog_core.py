@@ -33,100 +33,97 @@ class Cog_Core(commands.Cog):
     @commands.command()
     async def load(self, ctx, *args):
         print_cmd("load", args, ctx)
-        if len(args) == 0:
-            message = ":x:What extension you want to load???"
-            await send_msg("load", message, ctx)
-        else:
-            args_exts = set(args)
-            if "all" in args_exts:
-                args_exts = self.list_exts
-            
-            exts_stat = [set(), set(), set()]
-            msgs_stat = [":white_check_mark:Extension loaded",
-                        ":x:Extension already loaded",
-                        ":x:Extension not found"]
-            for exts in args_exts:
-                try:
-                    self.bot.load_extension(ext_str(exts))
-                except commands.errors.ExtensionAlreadyLoaded as e:
-                    exts_stat[1].add(exts)
-                    logger.warning(e.args[0])
-                except commands.errors.ExtensionNotFound as e:
-                    exts_stat[2].add(exts)
-                    logger.warning(e.args[0])
-                else:
-                    exts_stat[0].add(exts)
-            
-            if "all" in args and len(exts_stat[0]) != 0:
-                exts_stat[1] = exts_stat[2] = []
-            send_msg = ""
-            for msg, exts in zip(msgs_stat, exts_stat):
-                send_msg = create_msg(send_msg, msg, exts)
-            await send_msg("load", message, ctx)
+        args_exts = set(args)
+        all_flag = False
+        if len(args) == 0 or "all" in args:
+            all_flag = True
+        if all_flag:
+            args_exts = self.list_exts
+        
+        exts_stat = [set(), set(), set()]
+        msgs_stat = [":white_check_mark:Extension loaded",
+                    ":x:Extension already loaded",
+                    ":x:Extension not found"]
+        for exts in args_exts:
+            try:
+                self.bot.load_extension(ext_str(exts))
+            except commands.errors.ExtensionAlreadyLoaded as e:
+                exts_stat[1].add(exts)
+                logger.warning(e.args[0])
+            except commands.errors.ExtensionNotFound as e:
+                exts_stat[2].add(exts)
+                logger.warning(e.args[0])
+            else:
+                exts_stat[0].add(exts)
+        
+        if all_flag and len(exts_stat[0]) != 0:
+            exts_stat[1] = exts_stat[2] = []
+        message = ""
+        for msg, exts in zip(msgs_stat, exts_stat):
+            message = create_msg(message, msg, exts)
+        await send_msg("load", message, ctx)
 
     @commands.command()
     async def unload(self, ctx, *args):
         print_cmd("unload", args, ctx)
-        if len(args) == 0:
-            message = ":x:What extension you want to unload???"
-            await send_msg("unload", message, ctx)
-        else:
-            args_exts = set(args)
-            if "all" in args_exts:
-                args_exts = self.list_exts
-            
-            exts_stat = [set(), set()]
-            msgs_stat = [":white_check_mark:Extension unloaded",
-                        ":x:Extension not loaded"]
-            for exts in args_exts:
-                try:
-                    self.bot.unload_extension(ext_str(exts))
-                except commands.errors.ExtensionNotLoaded as e:
-                    exts_stat[1].add(exts)
-                    logger.warning(e.args[0])
-                else:
-                    exts_stat[0].add(exts)
-            
-            if "all" in args and len(exts_stat[0]) != 0:
-                exts_stat[1] = []
-            send_msg = ""
-            for msg, exts in zip(msgs_stat, exts_stat):
-                send_msg = create_msg(send_msg, msg, exts)
-            await send_msg("unload", message, ctx)
+        args_exts = set(args)
+        all_flag = False
+        if len(args) == 0 or "all" in args:
+            all_flag = True
+        if all_flag:
+            args_exts = self.list_exts
+        
+        exts_stat = [set(), set()]
+        msgs_stat = [":white_check_mark:Extension unloaded",
+                    ":x:Extension not loaded"]
+        for exts in args_exts:
+            try:
+                self.bot.unload_extension(ext_str(exts))
+            except commands.errors.ExtensionNotLoaded as e:
+                exts_stat[1].add(exts)
+                logger.warning(e.args[0])
+            else:
+                exts_stat[0].add(exts)
+        
+        if "all" in args and len(exts_stat[0]) != 0:
+            exts_stat[1] = []
+        message = ""
+        for msg, exts in zip(msgs_stat, exts_stat):
+            message = create_msg(message, msg, exts)
+        await send_msg("unload", message, ctx)
 
     @commands.command()
     async def reload(self, ctx, *args):
         print_cmd("reload", args, ctx)
-        if len(args) == 0:
-            message = ":x:What extension you want to reload???"
-            await send_msg("reload", message, ctx)
-        else:
-            args_exts = set(args)
-            if "all" in args_exts:
-                args_exts = self.list_exts
-            
-            exts_stat = [set(), set(), set()]
-            msgs_stat = [":white_check_mark:Extension reloaded",
-                        ":x:Extension already loaded",
-                        ":x:Extension not loaded"]
-            for exts in args_exts:
-                try:
-                    self.bot.reload_extension(ext_str(exts))
-                except commands.errors.ExtensionAlreadyLoaded as e:
-                    exts_stat[1].add(exts)
-                    logger.warning(e.args[0])
-                except commands.errors.ExtensionNotLoaded as e:
-                    exts_stat[2].add(exts)
-                    logger.warning(e.args[0])
-                else:
-                    exts_stat[0].add(exts)
-            
-            if "all" in args and len(exts_stat[0]) != 0:
-                exts_stat[1] = exts_stat[2] = []
-            send_msg = ""
-            for msg, exts in zip(msgs_stat, exts_stat):
-                send_msg = create_msg(send_msg, msg, exts)
-            await send_msg("reload", message, ctx)
+        args_exts = set(args)
+        all_flag = False
+        if len(args) == 0 or "all" in args:
+            all_flag = True
+        if all_flag:
+            args_exts = self.list_exts
+        
+        exts_stat = [set(), set(), set()]
+        msgs_stat = [":white_check_mark:Extension reloaded",
+                    ":x:Extension already loaded",
+                    ":x:Extension not loaded"]
+        for exts in args_exts:
+            try:
+                self.bot.reload_extension(ext_str(exts))
+            except commands.errors.ExtensionAlreadyLoaded as e:
+                exts_stat[1].add(exts)
+                logger.warning(e.args[0])
+            except commands.errors.ExtensionNotLoaded as e:
+                exts_stat[2].add(exts)
+                logger.warning(e.args[0])
+            else:
+                exts_stat[0].add(exts)
+        
+        if all_flag and len(exts_stat[0]) != 0:
+            exts_stat[1] = exts_stat[2] = []
+        message = ""
+        for msg, exts in zip(msgs_stat, exts_stat):
+            message = create_msg(message, msg, exts)
+        await send_msg("reload", message, ctx)
     
     @commands.command()
     async def update_cogs(self, ctx):

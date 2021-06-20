@@ -1,12 +1,13 @@
 import discord
 from discord.ext import commands
 from utils import save_json
-from log import logger, print_cmd, send_msg
+from log import logger, print_cmd, send_msg, send_err
 
 class Misc(commands.Cog):
     def __init__(self, bot):
         logger.info("load misc")
         self.bot = bot
+        logger.info("load misc success")
     
     @commands.command()
     async def ping(self, ctx, *args):
@@ -25,6 +26,13 @@ class Misc(commands.Cog):
         message = ":white_check_mark:Change bot game stat: " + self.bot.setting["GAME"]
         await send_msg("change_game", message, ctx)
         save_json(self.bot.setting)
+    
+    @change_game.error
+    async def change_game_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            err_msg = "recieve no arguments."
+            message = ":x:`change_game` require 1 argument"
+            await send_err("change_game", message, err_msg, ctx)
 
 
 def setup(bot):

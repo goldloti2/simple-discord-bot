@@ -18,6 +18,7 @@ class Test(commands.Cog):
     def __init__(self, bot):
         logger.info("load test")
         self.bot = bot
+        logger.info("load test success")
     
     @commands.command()
     async def pong(self, ctx):

@@ -6,7 +6,7 @@ import requests
 from utils import load_json, save_json
 from twitter.twitter_class import Twitter_Timeline, Twitter_Recent
 
-from log import logger, print_cmd, send_msg
+from log import logger, print_cmd, send_msg, send_err
 
 
 class Twitter(commands.Cog):
@@ -20,6 +20,7 @@ class Twitter(commands.Cog):
         except:
             sub_json = {"user": [], "query": []}
         
+        
         removes = []
         users = []
         for user in sub_json["user"]:
@@ -31,6 +32,7 @@ class Twitter(commands.Cog):
                                               channel))
             else:
                 removes.append(user)
+        load_user_num = f"{len(users)}/{len(sub_json['user'])}"
         for rm in removes:
             sub_json["user"].remove(rm)
         
@@ -44,6 +46,7 @@ class Twitter(commands.Cog):
                                               channel))
             else:
                 removes.append(query)
+        load_query_num = f"{len(queries)}/{len(sub_json['query'])}"
         for rm in removes:
             sub_json["query"].remove(rm)
         
@@ -51,6 +54,8 @@ class Twitter(commands.Cog):
         self.TW_obj = {}
         self.TW_obj["users"] = users
         self.TW_obj["queries"] = queries
+        logger.info(f"found {load_user_num} user, {load_query_num} query")
+        logger.info("load twitter success")
     
     @commands.command(aliases = ["sub_user", "su", "SU"])
     async def subscribe_user(self, ctx, args):
@@ -84,7 +89,14 @@ class Twitter(commands.Cog):
         await send_msg("subscribe_user", message, ctx)
         save_json(self.sub_json, self.json_path)
     
-    @commands.command(aliases = ["sub_search", "ss", "SS", "subscribe_query", "sq", "SQ"])
+    @subscribe_user.error
+    async def subscribe_user_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            err_msg = "recieve no arguments."
+            message = ":x:`subscribe_user` require 1 argument"
+            await send_err("subscribe_user", message, err_msg, ctx)
+    
+    @commands.command(aliases = ["sub_search", "ss", "SS", "subscribe_query", "sub_query", "sq", "SQ"])
     async def subscribe_search(self, ctx, *, args):
         print_cmd("subscribe_search", args, ctx)
         query = {"query": args,
@@ -98,6 +110,13 @@ class Twitter(commands.Cog):
         message = f":white_check_mark:subscribed: \"{args}\""
         await send_msg("subscribe_search", message, ctx)
         save_json(self.sub_json, self.json_path)
+    
+    @subscribe_search.error
+    async def subscribe_search_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            err_msg = "recieve no arguments."
+            message = ":x:`subscribe_search` require 1 argument"
+            await send_err("subscribe_search", message, err_msg, ctx)
     
     @commands.command(aliases = ["U"])
     async def update(self, ctx):
@@ -125,6 +144,28 @@ class Twitter(commands.Cog):
             message = message + f"{i:>7} {line:<35} #{channel}\n"
         message = message + "```"
         await send_msg("subscribed", message, ctx)
+    
+    '''delete user, delete query, (timer)
+    @commands.command(aliases = ["del_user", "du", "DU"])
+    async def delete_user(self, ctx, args):
+    
+    @delete_user.error
+    async def delete_user_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            err_msg = "recieve no arguments."
+            message = ":x:`delete_user` require 1 argument"
+            await send_err("delete_user", message, err_msg, ctx)
+    
+    @commands.command(aliases = ["del_search", "ds", "DS", "delete_query", "del_query", "dq", "DQ"])
+    async def delete_search(self, ctx, args):
+    
+    @delete_search.error
+    async def delete_search_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            err_msg = "recieve no arguments."
+            message = ":x:`delete_search` require 1 argument"
+            await send_err("delete_search", message, err_msg, ctx)
+    '''
 
 
 def setup(bot):

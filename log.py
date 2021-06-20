@@ -28,7 +28,7 @@ logger.addHandler(ch)
 
 
 def print_cmd(cmd, args, ctx):
-    logger.info(f"{cmd} {args}, from {ctx.channel}")
+    logger.info(f"({cmd}) {args}, from {ctx.channel}")
 
 async def send_msg(cmd, message, ctx):
     try:
@@ -36,9 +36,23 @@ async def send_msg(cmd, message, ctx):
     except discord.HTTPException as e:
         status = e.args[0].status if hasattr(e.args[0], "status")\
                                   else e.args[0].status_code
-        logger.warning(f"{cmd} response failed, HTTP code:{status}")
+        logger.warning(f"({cmd}) response failed, HTTP code:{status}")
     except:
-        logger.error(f"{cmd} response error", exc_info = True)
+        logger.error(f"({cmd}) response error", exc_info = True)
     else:
-        logger.info(f"{cmd} response success")
-    logger.debug(message)
+        logger.info(f"({cmd}) response success")
+    logger.debug(f"\n{message}")
+
+async def send_err(cmd, message, err_msg, ctx):
+    logger.warning(f"({cmd} error) {err_msg}")
+    try:
+        await ctx.send(message)
+    except discord.HTTPException as e:
+        status = e.args[0].status if hasattr(e.args[0], "status")\
+                                  else e.args[0].status_code
+        logger.warning(f"({cmd} error) response failed, HTTP code:{status}")
+    except:
+        logger.error(f"({cmd} error) response error", exc_info = True)
+    else:
+        logger.info(f"({cmd} error) response success")
+    logger.debug(f"\n{message}")

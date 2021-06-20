@@ -99,3 +99,12 @@ and fill in the required contents
 	- removed function - print_cmd()
 - log.py
 	- added function - print_cmd(), send_msg()
+  
+2021/06/20
+- Fix send message bugs in cog_core.py
+- Handle potential exceptions in main.py (except ctrl-c, _it seems like Windows problem?_)
+- Handle missing argument errors in cmds/misc.py and cmds/twitter.py
+- Add and change some logger messages
+- Working on delete subscription commands in cmds/twitter.py
+- log.py
+	- added function - send_err()

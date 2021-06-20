@@ -23,7 +23,7 @@ class Twitter_Class():
                             params = self.params)
     
     def init_req(self):
-        logger.info(f"init request: {self.console_msg}")
+        logger.debug(f"init request: {self.console_msg}")
         response = self.req()
         if response.status_code != 200:
             logger.warning(f"init {self.console_msg}: {response.status_code}")
@@ -31,14 +31,14 @@ class Twitter_Class():
             return
         res_json = response.json()
         res_cnt = res_json["meta"]["result_count"]
-        logger.info(f"init response: {self.console_msg} get: {res_cnt}")
+        logger.debug(f"init response get: {res_cnt:2}, {self.console_msg}")
         if res_cnt == 0:
             return
         self.params["since_id"] = res_json["meta"]["newest_id"]
     
     async def request(self):
         loop = asyncio.get_running_loop()
-        logger.info(f"request: {self.console_msg}")
+        logger.debug(f"request: {self.console_msg}")
         response = await loop.run_in_executor(None, self.req)
         if response.status_code != 200:
             logger.warning(f"{self.console_msg}: {response.status_code}")
@@ -46,7 +46,7 @@ class Twitter_Class():
             return
         res_json = response.json()
         res_cnt = res_json["meta"]["result_count"]
-        logger.info(f"response: {self.console_msg} get: {res_cnt}")
+        logger.debug(f"response get: {res_cnt:2}, from {self.console_msg} ")
         if res_cnt == 0:
             return
         messages = self.response_proc(res_json)

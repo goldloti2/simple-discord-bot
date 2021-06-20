@@ -18,8 +18,16 @@ async def on_ready():
         bot.load_extension("cog_core")
     except commands.errors.ExtensionAlreadyLoaded:
         pass
-    logger.info("logged in as {bot.user}")
+    logger.info(f"logged in as {bot.user}")
 
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        logger.warning("recieve unknown command")
+    elif isinstance(error, commands.MissingRequiredArgument):
+        pass
+    else:
+        logger.error(error)
 
 
 if __name__ == "__main__":
