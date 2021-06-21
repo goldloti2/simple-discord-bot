@@ -5,7 +5,8 @@ import asyncio
 import requests
 import time
 
-from log import logger, print_cmd, send_msg
+from log import logger, send_msg
+import logwrap
 '''
 * Both asyncio.ensure_future() and loop.create_task() will add the coroutines
 to the loop
@@ -15,32 +16,31 @@ to the loop
 '''
 
 class Test(commands.Cog):
+    @logwrap.initlog
     def __init__(self, bot):
-        logger.info("load test")
         self.bot = bot
-        logger.info("load test success")
     
     @commands.command()
-    async def pong(self, ctx):
-        print_cmd("pong", [], ctx)
+    @logwrap.commandlog
+    async def pong(self, ctx, *args):
         start_time = time.time()
         self.loop = asyncio.get_running_loop()
         tasks = [asyncio.ensure_future(self.request_url(i, start_time, ctx))\
                 for i in range(5)]
         #await asyncio.wait(tasks)
         message = f"end time: {time.time() - start_time:.5f} sec. {id(self.loop)}"
-        await send_msg("pong", message, ctx)
         await self.call_pong2(ctx)
+        return message
     
     @commands.command()
+    @logwrap.commandlog
     async def pong2(self, ctx):
-        print_cmd("pong2", [], ctx)
         start_time = time.time()
         self.loop = asyncio.get_running_loop()
         for i in range(5):
             self.loop.create_task(self.request_url(i, start_time, ctx))
         message = f"end time: {time.time() - start_time:.5f} sec. {id(self.loop)}"
-        await send_msg("pong2", message, ctx)
+        return message
     
     async def call_pong2(self, ctx):
         message = "This is pong2()"

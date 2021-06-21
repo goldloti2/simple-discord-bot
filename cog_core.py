@@ -3,6 +3,7 @@ from discord.ext import commands
 import os
 
 from log import logger, print_cmd, send_msg
+import logwrap
 
 def ext_str(exts):
     return f"cmds.{exts}"
@@ -15,8 +16,8 @@ def create_msg(msg, head, set_exts):
 
 
 class Cog_Core(commands.Cog):
+    @logwrap.initlog
     def __init__(self, bot):
-        logger.info("load cog_core")
         self.bot = bot
         self.check_cmds()
         for exts in self.list_exts:
@@ -30,9 +31,21 @@ class Cog_Core(commands.Cog):
         self.list_exts = list_exts
         logger.info(f"Extension found:{', '.join(list_exts)}")
     
+    '''
+    command load(*args):
+        argument:
+            args (optional): extension want to load
+        send message (on success):
+            ":white_check_mark:Extension loaded: {loaded extension}"
+            (opt)":x:Extension already loaded: {already loaded extension}"
+            (opt)":x:Extension not found: {not found extension}"
+        function:
+            load the specific extension(s).
+            args leave blank or "all" means load all the found extensions.
+    '''
     @commands.command()
+    @logwrap.commandlog
     async def load(self, ctx, *args):
-        print_cmd("load", args, ctx)
         args_exts = set(args)
         all_flag = False
         if len(args) == 0 or "all" in args:
@@ -61,11 +74,22 @@ class Cog_Core(commands.Cog):
         message = ""
         for msg, exts in zip(msgs_stat, exts_stat):
             message = create_msg(message, msg, exts)
-        await send_msg("load", message, ctx)
-
+        return message
+    
+    '''
+    command unload(*args):
+        argument:
+            args (optional): extension want to unload
+        send message (on success):
+            ":white_check_mark:Extension unloaded: {unloaded extension}"
+            (opt)":x:Extension not loaded: {not loaded extension}"
+        function:
+            unload the specific extension(s).
+            args leave blank or "all" means unload all the found extensions.
+    '''
     @commands.command()
+    @logwrap.commandlog
     async def unload(self, ctx, *args):
-        print_cmd("unload", args, ctx)
         args_exts = set(args)
         all_flag = False
         if len(args) == 0 or "all" in args:
@@ -90,11 +114,23 @@ class Cog_Core(commands.Cog):
         message = ""
         for msg, exts in zip(msgs_stat, exts_stat):
             message = create_msg(message, msg, exts)
-        await send_msg("unload", message, ctx)
-
+        return message
+    
+    '''
+    command reload(*args):
+        argument:
+            args (optional): extension want to reload
+        send message (on success):
+            ":white_check_mark:Extension reloaded: {loaded extension}"
+            (opt)":x:Extension already loaded: {already loaded extension}"
+            (opt)":x:Extension not loaded: {not loaded extension}"
+        function:
+            reload the specific extension(s).
+            args leave blank or "all" means reload all the found extensions.
+    '''
     @commands.command()
+    @logwrap.commandlog
     async def reload(self, ctx, *args):
-        print_cmd("reload", args, ctx)
         args_exts = set(args)
         all_flag = False
         if len(args) == 0 or "all" in args:
@@ -123,14 +159,22 @@ class Cog_Core(commands.Cog):
         message = ""
         for msg, exts in zip(msgs_stat, exts_stat):
             message = create_msg(message, msg, exts)
-        await send_msg("reload", message, ctx)
+        return message
     
+    '''
+    command update_cogs():
+        argument:
+        send message (on success):
+            "Find {len(self.list_exts)} extension: {self.list_exts}"
+        function:
+            check if there is any new extension file in cmds folder
+    '''
     @commands.command()
+    @logwrap.commandlog
     async def update_cogs(self, ctx):
-        print_cmd("update_cogs", [], ctx)
         self.check_cmds()
         message = f"Find {len(self.list_exts)} extension: __{'__, __'.join(self.list_exts)}__"
-        await send_msg("update_cogs", message, ctx)
+        return message
 
 
 def setup(bot):

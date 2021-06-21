@@ -108,3 +108,12 @@ and fill in the required contents
 - Working on delete subscription commands in cmds/twitter.py
 - log.py
 	- added function - send_err()
+  
+2021/06/21 v.0.7
+- Can delete subscription now
+- Apply decorator over all cogs.init and commands. Now the routine logging can be done with them.
+- Add comment over all commands
+- logwrap.py
+	- added decorator function - commandlog, initlog
+- cmds/twitter.py
+	- added command - delete_user(), delete_search()

@@ -28,7 +28,7 @@ logger.addHandler(ch)
 
 
 def print_cmd(cmd, args, ctx):
-    logger.info(f"({cmd}) {args}, from {ctx.channel}")
+    logger.info(f"({cmd}) {args}, from {ctx}")
 
 async def send_msg(cmd, message, ctx):
     try:

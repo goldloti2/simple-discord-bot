@@ -3,7 +3,7 @@ import json
 import asyncio
 from utils import parse_twitter_msg
 
-from log import logger, print_cmd, send_msg
+from log import logger, send_msg
 
 url_factory = {"timeline": "https://api.twitter.com/2/users/%s/tweets",
                "recent": "https://api.twitter.com/2/tweets/search/recent"}
@@ -26,8 +26,8 @@ class Twitter_Class():
         logger.debug(f"init request: {self.console_msg}")
         response = self.req()
         if response.status_code != 200:
-            logger.warning(f"init {self.console_msg}: {response.status_code}")
-            logger.warning(response.url)
+            logger.error(f"failed init {self.console_msg}: {response.status_code}")
+            logger.debug(response.url)
             return
         res_json = response.json()
         res_cnt = res_json["meta"]["result_count"]
@@ -41,8 +41,8 @@ class Twitter_Class():
         logger.debug(f"request: {self.console_msg}")
         response = await loop.run_in_executor(None, self.req)
         if response.status_code != 200:
-            logger.warning(f"{self.console_msg}: {response.status_code}")
-            logger.warning(response.url)
+            logger.error(f"failed {self.console_msg}: {response.status_code}")
+            logger.debug(response.url)
             return
         res_json = response.json()
         res_cnt = res_json["meta"]["result_count"]

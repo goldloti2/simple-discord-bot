@@ -24,6 +24,7 @@ async def on_ready():
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandNotFound):
         logger.warning("recieve unknown command")
+        logger.debug(error)
     elif isinstance(error, commands.MissingRequiredArgument):
         pass
     else:
