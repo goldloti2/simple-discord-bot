@@ -5,8 +5,8 @@ import asyncio
 import requests
 import time
 
-from log import logger, send_msg
-import logwrap
+from utils.log import logger, send_msg
+import utils.log as log
 '''
 * Both asyncio.ensure_future() and loop.create_task() will add the coroutines
 to the loop
@@ -16,12 +16,12 @@ to the loop
 '''
 
 class Test(commands.Cog):
-    @logwrap.initlog
+    @log.initlog
     def __init__(self, bot):
         self.bot = bot
     
     @commands.command()
-    @logwrap.commandlog
+    @log.commandlog
     async def pong(self, ctx, *args):
         start_time = time.time()
         self.loop = asyncio.get_running_loop()
@@ -33,7 +33,7 @@ class Test(commands.Cog):
         return message
     
     @commands.command()
-    @logwrap.commandlog
+    @log.commandlog
     async def pong2(self, ctx):
         start_time = time.time()
         self.loop = asyncio.get_running_loop()
@@ -49,11 +49,11 @@ class Test(commands.Cog):
     async def request_url(self, num, start_time, ctx):
         url = 'https://www.google.com.tw/search'
         t = time.time()
-        message = f"#{num}: Request at {t - start_time:.5f} sec.\n"
+        message = f"\\#{num}: Request at {t - start_time:.5f} sec.\n"
         res = await self.loop.run_in_executor(None, lambda: requests.get(url, params = {"q": "python"}))
         message = f"{message}{type(res)}\n"
         t = time.time()
-        message = f"{message}#{num}: Response at {t - start_time:.5f} sec."
+        message = f"{message}\\#{num}: Response at {t - start_time:.5f} sec."
         await send_msg("request_url()", message, ctx)
 
 

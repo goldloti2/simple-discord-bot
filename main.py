@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
-from log import logger
-from utils import load_json
+from utils.log import logger
+from utils.utils import load_json
 
 
 setting = load_json()
@@ -15,10 +15,10 @@ async def on_ready():
     game = discord.Game(bot.setting["GAME"])
     await bot.change_presence(status=discord.Status.idle, activity=game)
     try:
-        bot.load_extension("cog_core")
+        bot.load_extension("utils.cog_core")
     except commands.errors.ExtensionAlreadyLoaded:
         pass
-    logger.info(f"logged in as {bot.user}")
+    logger.info(f"logged in as {bot.user}, in {[g.name for g in bot.guilds]}")
 
 @bot.event
 async def on_command_error(ctx, error):

@@ -1,11 +1,11 @@
 import discord
 from discord.ext import commands
-from utils import save_json
-from log import logger, print_cmd, send_msg, send_err
-import logwrap
+from utils.utils import save_json
+from utils.log import logger, print_cmd, send_msg, send_err
+import utils.log as log
 
 class Misc(commands.Cog):
-    @logwrap.initlog
+    @log.initlog
     def __init__(self, bot):
         self.bot = bot
     
@@ -20,10 +20,10 @@ class Misc(commands.Cog):
             just a test ping
     '''
     @commands.command()
-    @logwrap.commandlog
+    @log.commandlog
     async def ping(self, ctx, *args):
         message = f"{self.bot.latency * 1000:.3f} ms, "
-        message = message + f"{ctx.channel}@<#{ctx.channel.id}>(#{ctx.channel.id})\n"
+        message = message + f"{ctx.channel}@<#{ctx.channel.id}>(\\#{ctx.channel.id})\n"
         message = message + f"{len(args)} arguments: {', '.join(args)}"
         return message
     
@@ -37,7 +37,7 @@ class Misc(commands.Cog):
             change the game stat of the bot
     '''
     @commands.command()
-    @logwrap.commandlog
+    @log.commandlog
     async def change_game(self, ctx, *, args):
         self.bot.setting["GAME"] = args
         game = discord.Game(self.bot.setting["GAME"])

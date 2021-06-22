@@ -2,8 +2,8 @@ import discord
 from discord.ext import commands
 import os
 
-from log import logger, print_cmd, send_msg
-import logwrap
+from utils.log import logger, print_cmd, send_msg
+import utils.log as log
 
 def ext_str(exts):
     return f"cmds.{exts}"
@@ -16,7 +16,7 @@ def create_msg(msg, head, set_exts):
 
 
 class Cog_Core(commands.Cog):
-    @logwrap.initlog
+    @log.initlog
     def __init__(self, bot):
         self.bot = bot
         self.check_cmds()
@@ -44,7 +44,7 @@ class Cog_Core(commands.Cog):
             args leave blank or "all" means load all the found extensions.
     '''
     @commands.command()
-    @logwrap.commandlog
+    @log.commandlog
     async def load(self, ctx, *args):
         args_exts = set(args)
         all_flag = False
@@ -88,7 +88,7 @@ class Cog_Core(commands.Cog):
             args leave blank or "all" means unload all the found extensions.
     '''
     @commands.command()
-    @logwrap.commandlog
+    @log.commandlog
     async def unload(self, ctx, *args):
         args_exts = set(args)
         all_flag = False
@@ -129,7 +129,7 @@ class Cog_Core(commands.Cog):
             args leave blank or "all" means reload all the found extensions.
     '''
     @commands.command()
-    @logwrap.commandlog
+    @log.commandlog
     async def reload(self, ctx, *args):
         args_exts = set(args)
         all_flag = False
@@ -170,7 +170,7 @@ class Cog_Core(commands.Cog):
             check if there is any new extension file in cmds folder
     '''
     @commands.command()
-    @logwrap.commandlog
+    @log.commandlog
     async def update_cogs(self, ctx):
         self.check_cmds()
         message = f"Find {len(self.list_exts)} extension: __{'__, __'.join(self.list_exts)}__"

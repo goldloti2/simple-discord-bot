@@ -3,6 +3,8 @@ Just a simple discord bot that can search and push twitter message on your disco
 只是個簡單的discord機器人，可以定時上twitter搜尋，然後推播到discord頻道中  
 
 ## Features
+- Subscribe/Desubscribe to the Twitter accounts or Twitter search
+- Automatically check newest tweets of the subscriptions and push to the discord channels
 - Change bot game stat
 - Load/Unload Cogs
 
@@ -29,6 +31,7 @@ Have to create a discord bot and get its token. (continue)
 Run the following command:  
 執行下列命令:  
 `python tools/gen_setting.py`  
+  
 and fill in the required contents  
 並輸入所需的內容  
 
@@ -117,3 +120,9 @@ and fill in the required contents
 	- added decorator function - commandlog, initlog
 - cmds/twitter.py
 	- added command - delete_user(), delete_search()
+  
+2021/06/22
+- Twitter Update Timer is online!
+- Twitter cog now can remember subscriptions for each guilds (Though I don't think anyone else will use it lol)
+- Combine logwrap.py into log.py
+- Move cog_core.py, log.py, utils.py into utils directory
