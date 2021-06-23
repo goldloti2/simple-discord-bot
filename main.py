@@ -1,5 +1,7 @@
 import discord
 from discord.ext import commands
+import os
+from shutil import rmtree
 from utils.log import logger
 from utils.utils import load_json
 
@@ -19,6 +21,14 @@ async def on_ready():
     except commands.errors.ExtensionAlreadyLoaded:
         pass
     logger.info(f"logged in as {bot.user}, in {[g.name for g in bot.guilds]}")
+
+@bot.event
+async def on_guild_join(guild):
+    os.makedirs(os.path.join("settings", str(guild.id)), exist_ok = True)
+
+@bot.event
+async def on_guild_remove(guild):
+    rmtree(os.path.join("settings", str(guild.id)), exist_ok = True)
 
 @bot.event
 async def on_command_error(ctx, error):

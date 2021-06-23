@@ -43,7 +43,7 @@ class Cog_Core(commands.Cog):
             load the specific extension(s).
             args leave blank or "all" means load all the found extensions.
     '''
-    @commands.command()
+    @commands.command(hidden = True)
     @log.commandlog
     async def load(self, ctx, *args):
         args_exts = set(args)
@@ -87,7 +87,7 @@ class Cog_Core(commands.Cog):
             unload the specific extension(s).
             args leave blank or "all" means unload all the found extensions.
     '''
-    @commands.command()
+    @commands.command(hidden = True)
     @log.commandlog
     async def unload(self, ctx, *args):
         args_exts = set(args)
@@ -128,7 +128,7 @@ class Cog_Core(commands.Cog):
             reload the specific extension(s).
             args leave blank or "all" means reload all the found extensions.
     '''
-    @commands.command()
+    @commands.command(hidden = True)
     @log.commandlog
     async def reload(self, ctx, *args):
         args_exts = set(args)
@@ -169,7 +169,7 @@ class Cog_Core(commands.Cog):
         function:
             check if there is any new extension file in cmds folder
     '''
-    @commands.command()
+    @commands.command(hidden = True)
     @log.commandlog
     async def update_cogs(self, ctx):
         self.check_cmds()

@@ -25,7 +25,7 @@ class Twitter(commands.Cog):
         self.bot = bot
         self.__headers = {"Authorization": f"Bearer {self.bot.setting['TWITTER_TOKEN']}"}
         self.set_timer = True
-        self.timer_int = 15
+        self.timer_int = 5
         self.sub_json = {}
         self.TW_obj = {}
         
@@ -61,7 +61,6 @@ class Twitter(commands.Cog):
             try:
                 sub_json = load_json(json_path(guild.id))
             except:
-                os.makedirs(json_path(guild.id, "dir"), exist_ok = True)
                 sub_json = {"user": [], "query": []}
             
             '''check and create Twitter_Timeline objects'''
@@ -74,7 +73,8 @@ class Twitter(commands.Cog):
                     tmp = Twitter_Timeline(user["username"],
                                            user["id"],
                                            self.__headers,
-                                           channel)
+                                           channel,
+                                           self.bot.loop)
                     users.append(tmp)
                 else:
                     removes.append(user)
@@ -91,7 +91,8 @@ class Twitter(commands.Cog):
                 if channel != None:
                     tmp = Twitter_Recent(query["query"],
                                          self.__headers,
-                                         channel)
+                                         channel,
+                                         self.bot.loop)
                     queries.append(tmp)
                 else:
                     removes.append(query)
@@ -110,13 +111,13 @@ class Twitter(commands.Cog):
             await self.bot.wait_until_ready()
             while not self.bot.is_closed():
                 await asyncio.sleep(self.timer_int * 60)
-                logger.info("Timer awake")
+                logger.debug("Timer awake")
                 if self.set_timer == True:
                     for guild in self.bot.guilds:
-                        asyncio.ensure_future(self.call_update(guild.id))
+                        self.call_update(guild.id)
         
         self.timer_task = self.bot.loop.create_task(update_timer())
-        logger.info(f"Set timer:{self.timer_int} min")
+        logger.debug(f"Set timer:{self.timer_int} min")
     
     '''
     command subscribe_user(args):
@@ -130,7 +131,12 @@ class Twitter(commands.Cog):
             the Twitter user can only be subscribed in 1 channel.
             on success, self.TW_obj["user"] and the json file will be updated.
     '''
-    @commands.command(aliases = ["sub_user", "su", "SU"])
+    @commands.command(aliases = ["sub_user", "su", "SU"],
+                      help = "Subscribe to the Twitter user if found.\n"
+                             "The latest tweets will show in the channel you call this command.\n"
+                             "Please give the user name (started with \"@\")",
+                      brief = "Subscribe to the Twitter user",
+                      usage = "<username>")
     @log.commandlog
     async def subscribe_user(self, ctx, args):
         guild = ctx.guild.id
@@ -180,7 +186,11 @@ class Twitter(commands.Cog):
             try subscribe to the specific Twitter search query in the current channel.
             self.TW_obj["query"], self.sub_json["query"] and the json file will be updated.
     '''
-    @commands.command(aliases = ["sub_search", "ss", "SS", "subscribe_query", "sub_query", "sq", "SQ"])
+    @commands.command(aliases = ["sub_search", "ss", "SS"],
+                      help = "Subscribe to the tweets can be found with the given query line.\n"
+                             "The latest tweets will show in the channel you call this command.",
+                      brief = "Subscribe to the Twitter search",
+                      usage = "<query>")
     @log.commandlog
     async def subscribe_search(self, ctx, *, args):
         guild = ctx.guild.id
@@ -216,7 +226,9 @@ class Twitter(commands.Cog):
         function:
             list all the subscriptions.
     '''
-    @commands.command(aliases = ["sub", "s", "S"])
+    @commands.command(aliases = ["sub", "s", "S"],
+                      help = "Show all subscription with their id.",
+                      brief = "Show all subscription")
     @log.commandlog
     async def subscribed(self, ctx):
         guild = ctx.guild.id
@@ -242,15 +254,17 @@ class Twitter(commands.Cog):
         function:
             force to check if there is any new subscribed tweets.
     '''
-    @commands.command(aliases = ["U"])
+    @commands.command(aliases = ["u", "U"],
+                      help = "Force checking the latest tweets of all subscriptions",
+                      brief = "Force checking update")
     async def update(self, ctx):
         print_cmd("update", (), ctx)
-        await self.call_update(ctx.guild.id)
+        self.call_update(ctx.guild.id)
     
-    async def call_update(self, guild):
+    def call_update(self, guild):
         for sub_type in self.TW_obj[guild]:
             for sub in self.TW_obj[guild][sub_type]:
-                asyncio.ensure_future(sub.request())
+                self.bot.loop.create_task(sub.request())
     
     '''
     command delete_user(args):
@@ -262,7 +276,11 @@ class Twitter(commands.Cog):
             delete the subscription to the specific user.
             on success, self.TW_obj["user"], self.sub_json["user"] and the json file will be updated.
     '''
-    @commands.command(aliases = ["del_user", "du", "DU"])
+    @commands.command(aliases = ["del_user", "du", "DU"],
+                      help = "Delete the Subscription of the Twitter user with the given id\n"
+                             "The id can be find using subscribed command.",
+                      brief = "Delete the Twitter user",
+                      usage = "<id>")
     @log.commandlog
     async def delete_user(self, ctx, args):
         guild = ctx.guild.id
@@ -301,7 +319,11 @@ class Twitter(commands.Cog):
             delete the subscription to the specific search query.
             on success, self.TW_obj["query"], self.sub_json["query"] and the json file will be updated.
     '''
-    @commands.command(aliases = ["del_search", "ds", "DS", "delete_query", "del_query", "dq", "DQ"])
+    @commands.command(aliases = ["del_search", "ds", "DS"],
+                      help = "Delete the Subscription of the Twitter search with the given id\n"
+                             "The id can be find using subscribed command.",
+                      brief = "Delete the Twitter search",
+                      usage = "<id>")
     @log.commandlog
     async def delete_search(self, ctx, args):
         guild = ctx.guild.id

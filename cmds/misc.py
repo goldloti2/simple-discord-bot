@@ -19,7 +19,9 @@ class Misc(commands.Cog):
         function:
             just a test ping
     '''
-    @commands.command()
+    @commands.command(help = "Send the latency of the bot, channel name and channel id"\
+                             ", and the arguments you sent",
+                      brief = "Ping the bot")
     @log.commandlog
     async def ping(self, ctx, *args):
         message = f"{self.bot.latency * 1000:.3f} ms, "
@@ -36,7 +38,9 @@ class Misc(commands.Cog):
         function:
             change the game stat of the bot
     '''
-    @commands.command()
+    @commands.command(help = "Change the game stat of the bot with the given line",
+                      brief = "Change the game stat",
+                      usage = "<game stat>")
     @log.commandlog
     async def change_game(self, ctx, *, args):
         self.bot.setting["GAME"] = args

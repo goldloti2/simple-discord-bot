@@ -20,7 +20,7 @@ class Test(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @commands.command()
+    @commands.command(hidden = True)
     @log.commandlog
     async def pong(self, ctx, *args):
         start_time = time.time()
@@ -32,7 +32,7 @@ class Test(commands.Cog):
         await self.call_pong2(ctx)
         return message
     
-    @commands.command()
+    @commands.command(hidden = True)
     @log.commandlog
     async def pong2(self, ctx):
         start_time = time.time()

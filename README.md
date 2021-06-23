@@ -126,3 +126,8 @@ and fill in the required contents
 - Twitter cog now can remember subscriptions for each guilds (Though I don't think anyone else will use it lol)
 - Combine logwrap.py into log.py
 - Move cog_core.py, log.py, utils.py into utils directory
+  
+2021/06/23
+- Hide some admin-only commands, add helps on commands, and remove some command aliases
+- Some small changes about async, making everyone using bot.loop, and remove unnecessary async on request()
+- Add on_guild_join and on_guild_remove events to create or remove subscription directory (though not test yet)

@@ -9,10 +9,11 @@ url_factory = {"timeline": "https://api.twitter.com/2/users/%s/tweets",
                "recent": "https://api.twitter.com/2/tweets/search/recent"}
 
 class Twitter_Class():
-    def __init__(self, api, headers, channel):
+    def __init__(self, api, headers, channel, loop):
         self.url = url_factory[api]
         self.__headers = headers
         self.channel = channel
+        self.loop = loop
     
     def response_proc(self, response):
         raise NotImplementedError
@@ -37,9 +38,8 @@ class Twitter_Class():
         self.params["since_id"] = res_json["meta"]["newest_id"]
     
     async def request(self):
-        loop = asyncio.get_running_loop()
         logger.debug(f"request: {self.console_msg}")
-        response = await loop.run_in_executor(None, self.req)
+        response = await self.loop.run_in_executor(None, self.req)
         if response.status_code != 200:
             logger.error(f"failed {self.console_msg}: {response.status_code}")
             logger.debug(response.url)
@@ -57,8 +57,8 @@ class Twitter_Class():
 
 
 class Twitter_Timeline(Twitter_Class):
-    def __init__(self, username, id, headers, channel):
-        super().__init__("timeline", headers, channel)
+    def __init__(self, username, id, headers, channel, loop):
+        super().__init__("timeline", headers, channel, loop)
         self.url = self.url % id
         self.username = username
         self.params = {"exclude": "retweets",
@@ -80,8 +80,8 @@ class Twitter_Timeline(Twitter_Class):
 
 
 class Twitter_Recent(Twitter_Class):
-    def __init__(self, query, headers, channel):
-        super().__init__("recent", headers, channel)
+    def __init__(self, query, headers, channel, loop):
+        super().__init__("recent", headers, channel, loop)
         self.query = query
         self.params = {"query": query,
                        "max_results": 10,
