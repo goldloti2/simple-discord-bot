@@ -25,7 +25,7 @@ class Twitter(commands.Cog):
         self.bot = bot
         self.__headers = {"Authorization": f"Bearer {self.bot.setting['TWITTER_TOKEN']}"}
         self.set_timer = True
-        self.timer_int = 5
+        self.timer_int = 3
         self.sub_json = {}
         self.TW_obj = {}
         
@@ -37,14 +37,16 @@ class Twitter(commands.Cog):
                     {
                     "username":<>,
                     "id":<>,
-                    "ch_id":<>
+                    "ch_id":<>,
+                    "since_id":<>
                     },
                     ...
                 ],
                 "query": [
                     {
-                        "query":<>,
-                        "ch_id":<>
+                    "query":<>,
+                    "ch_id":<>,
+                    "since_id":<>
                     },
                     ...
                 ]
@@ -70,8 +72,7 @@ class Twitter(commands.Cog):
             for user in sub_json["user"]:
                 channel = self.bot.get_channel(user["ch_id"])
                 if channel != None:
-                    tmp = Twitter_Timeline(user["username"],
-                                           user["id"],
+                    tmp = Twitter_Timeline(user,
                                            self.__headers,
                                            channel,
                                            self.bot.loop)
@@ -89,7 +90,7 @@ class Twitter(commands.Cog):
             for query in sub_json["query"]:
                 channel = self.bot.get_channel(query["ch_id"])
                 if channel != None:
-                    tmp = Twitter_Recent(query["query"],
+                    tmp = Twitter_Recent(query,
                                          self.__headers,
                                          channel,
                                          self.bot.loop)
@@ -114,7 +115,7 @@ class Twitter(commands.Cog):
                 logger.debug("Timer awake")
                 if self.set_timer == True:
                     for guild in self.bot.guilds:
-                        self.call_update(guild.id)
+                        self.bot.loop.create_task(self.call_update(guild.id))
         
         self.timer_task = self.bot.loop.create_task(update_timer())
         logger.debug(f"Set timer:{self.timer_int} min")
@@ -158,10 +159,10 @@ class Twitter(commands.Cog):
         user = {"username": args,
                 "id": response["id"],
                 "ch_id": ctx.channel.id}
-        new_obj = Twitter_Timeline(user["username"],
-                                   user["id"],
+        new_obj = Twitter_Timeline(user,
                                    self.__headers,
-                                   ctx.channel)
+                                   ctx.channel,
+                                   self.bot.loop)
         logger.info(f"add user: @{args}, in {ctx.guild.name}#{ctx.channel}")
         self.sub_json[guild]["user"].append(user)
         self.TW_obj[guild]["user"].append(new_obj)
@@ -196,9 +197,10 @@ class Twitter(commands.Cog):
         guild = ctx.guild.id
         query = {"query": args,
                  "ch_id": ctx.channel.id}
-        new_obj = Twitter_Recent(query["query"],
+        new_obj = Twitter_Recent(query,
                                  self.__headers,
-                                 ctx.channel)
+                                 ctx.channel,
+                                 self.bot.loop)
         logger.info(f"add query: \"{args}\", in {ctx.channel}")
         self.sub_json[guild]["query"].append(query)
         self.TW_obj[guild]["query"].append(new_obj)
@@ -259,12 +261,29 @@ class Twitter(commands.Cog):
                       brief = "Force checking update")
     async def update(self, ctx):
         print_cmd("update", (), ctx)
-        self.call_update(ctx.guild.id)
+        await self.call_update(ctx.guild.id)
     
-    def call_update(self, guild):
+    async def call_update(self, guild):
+        all_tasks = []
         for sub_type in self.TW_obj[guild]:
-            for sub in self.TW_obj[guild][sub_type]:
-                self.bot.loop.create_task(sub.request())
+            no_ch = []
+            for i, sub in enumerate(self.TW_obj[guild][sub_type]):
+                if self.bot.get_channel(sub.channel.id) != None:
+                    all_tasks.append(self.bot.loop.create_task(sub.request()))
+                else:
+                    no_ch.append(i)
+                    warn_msg = f"Can't find #{sub.channel.name}, delete "
+                    if sub_type == "user":
+                        warn_msg = warn_msg + f"@{sub.username}"
+                    else:
+                        warn_msg = warn_msg + f"\"{sub.query}\""
+                    logger.warning(warn_msg)
+            for i in sorted(no_ch, reverse = True):
+                self.sub_json[guild][sub_type].pop(i)
+                self.TW_obj[guild][sub_type].pop(i)
+        
+        await asyncio.wait(all_tasks)
+        save_json(self.sub_json[guild], json_path(guild))
     
     '''
     command delete_user(args):

@@ -17,6 +17,10 @@ def parse_twitter_msg(isotime, username, id):
     timestr = datetime.datetime.strptime(isotime, "%Y-%m-%dT%H:%M:%S.000Z")
     timestr += datetime.timedelta(hours = 8)
     outtime = timestr.strftime("%Y/%m/%d, %H:%M")
-    url = f"https://twitter.com/{username}/status/{id}"
-    return f"@{username}, {outtime}:\n{url}"
+    msg = f"@{username}, {outtime}:\n"
+    msg = msg.replace("_", "\\_")
+    msg = msg.replace("*", "\\*")
+    msg = msg.replace("~", "\\~")
+    msg = msg + f"https://twitter.com/{username}/status/{id}"
+    return msg
     "2021-06-16T07:41:52.000Z"

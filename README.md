@@ -131,3 +131,8 @@ and fill in the required contents
 - Hide some admin-only commands, add helps on commands, and remove some command aliases
 - Some small changes about async, making everyone using bot.loop, and remove unnecessary async on request()
 - Add on_guild_join and on_guild_remove events to create or remove subscription directory (though not test yet)
+  
+2021/06/24
+- Add since_id so that the twitter query can start from the last tweets it gets
+- If the subscription channel is deleted, the query will be deleted when update
+- Fix some message displaying bugs

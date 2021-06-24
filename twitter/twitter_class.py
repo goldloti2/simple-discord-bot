@@ -28,21 +28,21 @@ class Twitter_Class():
         response = self.req()
         if response.status_code != 200:
             logger.error(f"failed init {self.console_msg}: {response.status_code}")
-            logger.debug(response.url)
+            logger.debug(response.text)
             return
         res_json = response.json()
         res_cnt = res_json["meta"]["result_count"]
         logger.debug(f"init response get: {res_cnt:2}, {self.console_msg}")
         if res_cnt == 0:
             return
-        self.params["since_id"] = res_json["meta"]["newest_id"]
+        self.params["since_id"] = self.sub_json["since_id"] = res_json["meta"]["newest_id"]
     
     async def request(self):
         logger.debug(f"request: {self.console_msg}")
         response = await self.loop.run_in_executor(None, self.req)
         if response.status_code != 200:
             logger.error(f"failed {self.console_msg}: {response.status_code}")
-            logger.debug(response.url)
+            logger.debug(response.text)
             return
         res_json = response.json()
         res_cnt = res_json["meta"]["result_count"]
@@ -50,22 +50,26 @@ class Twitter_Class():
         if res_cnt == 0:
             return
         messages = self.response_proc(res_json)
-        self.params["since_id"] = res_json["meta"]["newest_id"]
+        self.params["since_id"] = self.sub_json["since_id"] = res_json["meta"]["newest_id"]
         for msg in messages:
             await send_msg(self.console_msg, msg, self.channel)
 
 
 
 class Twitter_Timeline(Twitter_Class):
-    def __init__(self, username, id, headers, channel, loop):
+    def __init__(self, sub_json, headers, channel, loop):
         super().__init__("timeline", headers, channel, loop)
-        self.url = self.url % id
-        self.username = username
+        self.sub_json = sub_json
+        self.url = self.url % self.sub_json["id"]
+        self.username = self.sub_json["username"]
         self.params = {"exclude": "retweets",
                        "max_results": 5,
                        "tweet.fields": "created_at"}
-        self.console_msg = f"@{username} in {channel}"
-        self.init_req()
+        self.console_msg = f"@{self.username} in {self.channel}"
+        if "since_id" in self.sub_json.keys():
+            self.params["since_id"] = self.sub_json["since_id"]
+        else:
+            self.init_req()
         self.params["max_results"] = 50
     
     def response_proc(self, response):
@@ -80,16 +84,20 @@ class Twitter_Timeline(Twitter_Class):
 
 
 class Twitter_Recent(Twitter_Class):
-    def __init__(self, query, headers, channel, loop):
+    def __init__(self, sub_json, headers, channel, loop):
         super().__init__("recent", headers, channel, loop)
-        self.query = query
-        self.params = {"query": query,
+        self.sub_json = sub_json
+        self.query = self.sub_json["query"]
+        self.params = {"query": self.query,
                        "max_results": 10,
                        "tweet.fields": "author_id,created_at",
                        "expansions": "author_id",
                        "user.fields": "username"}
-        self.console_msg = f"\"{query}\" in {channel}"
-        self.init_req()
+        self.console_msg = f"\"{self.query}\" in {self.channel}"
+        if "since_id" in self.sub_json.keys():
+            self.params["since_id"] = self.sub_json["since_id"]
+        else:
+            self.init_req()
         self.params["max_results"] = 50
     
     def response_proc(self, response):
