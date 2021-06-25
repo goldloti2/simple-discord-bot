@@ -1,5 +1,5 @@
 # Simple-Discord-Bot
-Just a simple discord bot that can search and push twitter message on your discord channel.  
+Just a simple discord bot that can search and push twitter message to your discord channel.  
 只是個簡單的discord機器人，可以定時上twitter搜尋，然後推播到discord頻道中  
 
 ## Features
@@ -12,8 +12,8 @@ Just a simple discord bot that can search and push twitter message on your disco
 Python version: 3.8.2  
 Python 版本: 3.8.2  
   
-Package required: discord.py, requests, json  
-Package需求: discord.py, requests, json  
+Package required: discord.py, requests  
+Package需求: discord.py, requests  
   
 or just run following commands:  
 或是直接執行下列命令:  
@@ -136,3 +136,8 @@ and fill in the required contents
 - Add since_id so that the twitter query can start from the last tweets it gets
 - If the subscription channel is deleted, the query will be deleted when update
 - Fix some message displaying bugs
+- Remove json from requirement.txt since it is the built-in module
+  
+2021/06/25
+- Reduce some redundant code in cmds/twitter.py and twitter/twitter_class.py
+- Add Windows cmd / Linux bash script for setting up the environment

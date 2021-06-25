@@ -55,58 +55,44 @@ class Twitter(commands.Cog):
         }
         '''
         
-        read_u = 0
-        find_u = 0
-        read_q = 0
-        find_q = 0
+        readed = {"user":0, "query":0}
+        finded = {"user":0, "query":0}
         for guild in self.bot.guilds:
+            self.TW_obj[guild.id] = {}
             try:
                 sub_json = load_json(json_path(guild.id))
             except:
                 sub_json = {"user": [], "query": []}
             
             '''check and create Twitter_Timeline objects'''
-            read_u += len(sub_json["user"])
-            removes = []
-            users = []
-            for user in sub_json["user"]:
-                channel = self.bot.get_channel(user["ch_id"])
-                if channel != None:
-                    tmp = Twitter_Timeline(user,
-                                           self.__headers,
-                                           channel,
-                                           self.bot.loop)
-                    users.append(tmp)
-                else:
-                    removes.append(user)
-            for rm in removes:
-                sub_json["user"].remove(rm)
-            find_u += len(users)
-            
-            '''check and create Twitter_Recent objects'''
-            read_q += len(sub_json["query"])
-            removes = []
-            queries = []
-            for query in sub_json["query"]:
-                channel = self.bot.get_channel(query["ch_id"])
-                if channel != None:
-                    tmp = Twitter_Recent(query,
-                                         self.__headers,
-                                         channel,
-                                         self.bot.loop)
-                    queries.append(tmp)
-                else:
-                    removes.append(query)
-            for rm in removes:
-                sub_json["query"].remove(rm)
-            find_q += len(queries)
-            
+            for sub_type in sub_json:
+                readed[sub_type] += len(sub_json[sub_type])
+                removes = []
+                objs = []
+                for sub in sub_json[sub_type]:
+                    channel = self.bot.get_channel(sub["ch_id"])
+                    if channel != None:
+                        if sub_type == "user":
+                            twitter_cls = Twitter_Timeline
+                        else:
+                            twitter_cls = Twitter_Recent
+                        tmp = twitter_cls(sub,
+                                          self.__headers,
+                                          channel,
+                                          self.bot.loop)
+                        objs.append(tmp)
+                    else:
+                        removes.append(sub)
+                for rm in removes:
+                    sub_json[sub_type].remove(rm)
+                finded[sub_type] += len(objs)
+                self.TW_obj[guild.id][sub_type] = objs
+                
             self.sub_json[guild.id] = sub_json
-            self.TW_obj[guild.id] = {}
-            self.TW_obj[guild.id]["user"] = users
-            self.TW_obj[guild.id]["query"] = queries
             save_json(sub_json, json_path(guild.id))
-        logger.info(f"found {find_u}/{read_u} user, {find_q}/{read_q} query")
+        user_num = f"{finded['user']}/{readed['user']}"
+        query_num = f"{finded['query']}/{readed['query']}"
+        logger.info(f"found {user_num} user, {query_num} query")
         
         async def update_timer():
             await self.bot.wait_until_ready()
