@@ -141,3 +141,7 @@ and fill in the required contents
 2021/06/25
 - Reduce some redundant code in cmds/twitter.py and twitter/twitter_class.py
 - Add Windows cmd / Linux bash script for setting up the environment
+  
+2021/06/27
+- Handle the requests error (maybe)
+- Reduce some codes in utils/log.py

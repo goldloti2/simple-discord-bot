@@ -39,23 +39,18 @@ def print_cmd(cmd, args, ctx):
 
 async def send_msg(cmd, message, ctx):
     head = logger_head(ctx, cmd)
-    try:
-        await ctx.send(message)
-    except discord.HTTPException as e:
-        logger.warning(f"{head} response failed:{e}")
-    except:
-        logger.error(f"{head} response error", exc_info = True)
-    else:
-        logger.debug(f"{head} response success")
-    logger.debug(f"\n{message}")
+    await ctx_send(head, cmd, message, ctx)
 
 async def send_err(cmd, message, err_msg, ctx):
     head = logger_head(ctx, cmd, "err")
     logger.warning(f"{head} {err_msg}")
+    await ctx_send(head, cmd, message, ctx)
+
+async def ctx_send(head, cmd, message, ctx):
     try:
         await ctx.send(message)
     except discord.HTTPException as e:
-        logger.warning(f"{head} response failed, HTTP code:{e}")
+        logger.warning(f"{head} response failed:{e}")
     except:
         logger.error(f"{head} response error", exc_info = True)
     else:
