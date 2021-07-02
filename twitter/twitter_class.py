@@ -29,10 +29,12 @@ class Twitter_Class():
         try:
             response = await self.loop.run_in_executor(None, self.req)
         except requests.exceptions.ConnectionError as e:
-            logger.warning(f"request failed:{e}")
+            logger.warning(f"request failed")
+            logger.debug(str(e))
             return
         except:
-            logger.error(f"request error", exc_info = True)
+            logger.error(f"request error")
+            logger.debug("\n", exc_info = True)
             return
         if response.status_code != 200:
             logger.error(f"failed {self.console_msg}: {response.status_code}")

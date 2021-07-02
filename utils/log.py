@@ -1,16 +1,20 @@
 import discord
 import logging
+from logging.handlers import TimedRotatingFileHandler
 import time
 import os
 
 
 filename = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) + ".log"
-fmt = logging.Formatter('[%(asctime)s]:[%(levelname)1.1s]:%(name)s: %(message)s')
+fmt = logging.Formatter('[%(asctime)s]:[%(levelname)s]:%(name)s: %(message)s')
 
 dis_log = logging.getLogger("discord")
 dis_log.setLevel(logging.DEBUG)
 filepath = os.path.join("log", "discord", filename)
-fh = logging.FileHandler(filename = filepath, encoding = 'utf-8', mode = 'w')
+fh = TimedRotatingFileHandler(filename = filepath,
+                              when = "midnight",
+                              backupCount = 7,
+                              encoding = 'utf-8')
 fh.setLevel(logging.DEBUG)
 fh.setFormatter(fmt)
 dis_log.addHandler(fh)
@@ -18,7 +22,10 @@ dis_log.addHandler(fh)
 logger = logging.getLogger("logger")
 logger.setLevel(logging.DEBUG)
 filepath = os.path.join("log", filename)
-fh = logging.FileHandler(filename = filepath, encoding = 'utf-8', mode = 'w')
+fh = TimedRotatingFileHandler(filename = filepath,
+                              when = "midnight",
+                              backupCount = 7,
+                              encoding = 'utf-8')
 fh.setLevel(logging.DEBUG)
 fh.setFormatter(fmt)
 logger.addHandler(fh)
@@ -50,9 +57,11 @@ async def ctx_send(head, cmd, message, ctx):
     try:
         await ctx.send(message)
     except discord.HTTPException as e:
-        logger.warning(f"{head} response failed:{e}")
+        logger.warning(f"{head} response failed")
+        logger.debug(str(e))
     except:
-        logger.error(f"{head} response error", exc_info = True)
+        logger.error(f"{head} response error")
+        logger.debug("\n", exc_info = True)
     else:
         logger.debug(f"{head} response success")
     logger.debug(f"\n{message}")
@@ -79,7 +88,8 @@ def initlog(func):
         try:
             func(*args, **kwargs)
         except:
-            logger.error(f"load {classname} failed", exc_info = True)
+            logger.error(f"load {classname} failed")
+            logger.debug("\n", exc_info = True)
         else:
             logger.debug(f"load {classname} success")
     return wrapper

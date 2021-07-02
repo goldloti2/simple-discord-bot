@@ -41,6 +41,9 @@ async def on_command_error(ctx, error):
         logger.error(error)
 
 
-if __name__ == "__main__":
+def main():
     logger.info("bot start...")
     bot.run(bot.setting["DC_TOKEN"])
+
+if __name__ == "__main__":
+    main()

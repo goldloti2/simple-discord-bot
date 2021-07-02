@@ -145,3 +145,7 @@ and fill in the required contents
 2021/06/27
 - Handle the requests error (maybe)
 - Reduce some codes in utils/log.py
+  
+2021/07/02
+- Change some logging format, less information shows on stdout
+- Add Windows cmd / Linux bash for clean up the log
