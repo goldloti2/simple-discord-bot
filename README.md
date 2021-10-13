@@ -44,6 +44,9 @@ and fill in the required contents
 [Twitter query (English)](https://developer.twitter.com/en/docs/twitter-api/tweets/search/integrate/build-a-query "Twitter query (English)")  
 [Discord bot教學影片清單(中文)](https://www.youtube.com/watch?v=4JptXXkqiKU&list=PLSCgthA1Anif1w6mKM3O6xlBGGypXtrtN "Discord bot教學影片清單(中文)")  
 
+## Known Bugs
+- Coroutines won't clean up when reloading the cogs
+
 ## Update
 2021/06/14 v.0.0
 - Initial commit, cog load/unload avaliable
@@ -149,3 +152,11 @@ and fill in the required contents
 2021/07/02
 - Change some logging format, less information shows on stdout
 - Add Windows cmd / Linux bash for clean up the log
+
+2021/10/13
+- cmds/shinycolors.py
+    - A small cog that notify boarderline of ShinyColors event every half an hour
+    - Deprecate soon
+- Bug found, not fix yet
+    - Coroutines won't clean up when reloading the cogs, thus notifiers will be setup multiple times.
+- Remove minor redundant codes in utils/log.py

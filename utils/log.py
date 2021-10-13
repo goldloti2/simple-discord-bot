@@ -46,14 +46,14 @@ def print_cmd(cmd, args, ctx):
 
 async def send_msg(cmd, message, ctx):
     head = logger_head(ctx, cmd)
-    await ctx_send(head, cmd, message, ctx)
+    await ctx_send(head, message, ctx)
 
 async def send_err(cmd, message, err_msg, ctx):
     head = logger_head(ctx, cmd, "err")
     logger.warning(f"{head} {err_msg}")
-    await ctx_send(head, cmd, message, ctx)
+    await ctx_send(head, message, ctx)
 
-async def ctx_send(head, cmd, message, ctx):
+async def ctx_send(head, message, ctx):
     try:
         await ctx.send(message)
     except discord.HTTPException as e:
