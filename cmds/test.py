@@ -5,7 +5,7 @@ import asyncio
 import requests
 import time
 
-from utils.log import logger, send_msg
+from utils.log import logger
 import utils.log as log
 '''
 * Both asyncio.ensure_future() and loop.create_task() will add the coroutines
@@ -44,7 +44,7 @@ class Test(commands.Cog):
     
     async def call_pong2(self, ctx):
         message = "This is pong2()"
-        await send_msg("call_pong2()", message, ctx)
+        await log.send_msg("call_pong2()", message, ctx)
     
     async def request_url(self, num, start_time, ctx):
         url = 'https://www.google.com.tw/search'
@@ -54,7 +54,7 @@ class Test(commands.Cog):
         message = f"{message}{type(res)}\n"
         t = time.time()
         message = f"{message}\\#{num}: Response at {t - start_time:.5f} sec."
-        await send_msg("request_url()", message, ctx)
+        await log.send_msg("request_url()", message, ctx)
 
 
 def setup(bot):

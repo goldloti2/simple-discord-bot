@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import os
 
-from utils.log import logger, print_cmd, send_msg
+from utils.log import logger
 import utils.log as log
 
 def ext_str(exts):

@@ -3,7 +3,8 @@ import json
 import asyncio
 from utils.utils import parse_twitter_msg
 
-from utils.log import logger, send_msg
+from utils.log import logger
+import utils.log as log
 
 url_factory = {"timeline": "https://api.twitter.com/2/users/%s/tweets",
                "recent": "https://api.twitter.com/2/tweets/search/recent"}
@@ -54,7 +55,7 @@ class Twitter_Class():
         
         messages = self.response_proc(res_json)
         for msg in messages:
-            await send_msg(self.console_msg, msg, self.channel)
+            await log.send_msg(self.console_msg, msg, self.channel)
 
 
 

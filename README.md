@@ -20,20 +20,34 @@ or just run following commands:
 `pip install -r requirements.txt`
 
 ## Discord Bot Setup
-Have to create a discord bot and get its token. (continue)  
-要創建一個Discord bot然後取得它的token (待補)  
-[Official Guide (English)](https://discordpy.readthedocs.io/en/stable/discord.html "Official Guide (English)")
+Have to create a discord bot, get its token, and invite the bot.
+要創建一個Discord bot，取得它的token，然後邀請bot
+  
+1. Follow the link below to create a new application and its bot.  
+依照下方連結創建新的應用與其bot  
+[Official Guide (English)](https://discordpy.readthedocs.io/en/stable/discord.html "Official Guide (English)")  
+  
+2. Go to OAuth2→URL Generator, check scope and permission needed, then go to the generated url to invite the bot.  
+到OAuth2→URL Generator，選擇對應的scope和permission，然後到產生的url邀請bot  
+  
+3. Fill in the token of the bot when generate setting.josn.  
+產生setting.json時將bot的token填入  
+
 
 ## Twitter Api Setup
-(continue)
+Press sign up in the link (continue)  
+[Twitter api - reference index (English)](https://developer.twitter.com/en/docs/twitter-api/api-reference-index "Twitter api - reference index (English)")  
 
-## Generate Setting.json
-Run the following command:  
-執行下列命令:  
-`python tools/gen_setting.py`  
+## Generate setting.json
+Run`init.cmd`(Windows) /`init.sh`(Linux)  
+執行`init.cmd`(Windows) /`init.sh`(Linux)  
   
-and fill in the required contents  
-並輸入所需的內容  
+and fill in the required contents:  
+並輸入所需的內容:  
+Discord token (required)
+Twitter token (required)
+game status (optional)
+command prefix (optional)
 
 ## Reference
 [Discord api (Engilsh)](https://discordpy.readthedocs.io/en/stable/api.html "Discord api (Engilsh)")  
@@ -45,7 +59,11 @@ and fill in the required contents
 [Discord bot教學影片清單(中文)](https://www.youtube.com/watch?v=4JptXXkqiKU&list=PLSCgthA1Anif1w6mKM3O6xlBGGypXtrtN "Discord bot教學影片清單(中文)")  
 
 ## Known Bugs
-- Coroutines won't clean up when reloading the cogs
+- ~~Coroutines won't clean up when reloading the cogs~~
+
+## Future Plans
+- Black Jack dealer
+- Music bot
 
 ## Update
 2021/06/14 v.0.0
@@ -152,7 +170,7 @@ and fill in the required contents
 2021/07/02
 - Change some logging format, less information shows on stdout
 - Add Windows cmd / Linux bash for clean up the log
-
+  
 2021/10/13
 - cmds/shinycolors.py
     - A small cog that notify boarderline of ShinyColors event every half an hour
@@ -160,3 +178,10 @@ and fill in the required contents
 - Bug found, not fix yet
     - Coroutines won't clean up when reloading the cogs, thus notifiers will be setup multiple times.
 - Remove minor redundant codes in utils/log.py
+  
+2021/11/30
+- cmds/shinycolors.py
+    - Move it into cmds/legacy/shinycolors.py. Bye shinycolors.
+- Fix bug: coroutines won't clean up when reloading the cogs
+- Fix bug: cmds/twitter.py won't make the directory for the new server
+- Minor code changes for logging

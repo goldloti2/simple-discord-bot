@@ -7,7 +7,7 @@ import requests
 from twitter.twitter_class import Twitter_Timeline, Twitter_Recent
 from utils.utils import load_json, save_json
 
-from utils.log import logger, print_cmd, send_msg, send_err
+from utils.log import logger
 import utils.log as log
 
 
@@ -161,7 +161,7 @@ class Twitter(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             err_msg = "recieve no arguments."
             message = ":x:`subscribe_user` require 1 argument"
-            await send_err("subscribe_user", message, err_msg, ctx)
+            await log.send_err("subscribe_user", message, err_msg, ctx)
     
     '''
     command subscribe_search(args):
@@ -199,7 +199,7 @@ class Twitter(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             err_msg = "recieve no arguments."
             message = ":x:`subscribe_search` require 1 argument"
-            await send_err("subscribe_search", message, err_msg, ctx)
+            await log.send_err("subscribe_search", message, err_msg, ctx)
     
     '''
     command subscribed():
@@ -246,7 +246,7 @@ class Twitter(commands.Cog):
                       help = "Force checking the latest tweets of all subscriptions",
                       brief = "Force checking update")
     async def update(self, ctx):
-        print_cmd("update", (), ctx)
+        log.print_cmd("update", (), ctx)
         await self.call_update(ctx.guild.id)
     
     async def call_update(self, guild):
@@ -312,7 +312,7 @@ class Twitter(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             err_msg = "recieve no arguments."
             message = ":x:`delete_user` require 1 argument"
-            await send_err("delete_user", message, err_msg, ctx)
+            await log.send_err("delete_user", message, err_msg, ctx)
     
     '''
     command delete_search(args):
@@ -355,7 +355,14 @@ class Twitter(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             err_msg = "recieve no arguments."
             message = ":x:`delete_search` require 1 argument"
-            await send_err("delete_search", message, err_msg, ctx)
+            await log.send_err("delete_search", message, err_msg, ctx)
+    
+    def cog_unload(self):
+        if not self.timer_task.cancelled():
+            self.timer_task.cancel()
+            logger.info("twitter timer removed")
+        else:
+            logger.error("twitter timer not found")
 
 
 def setup(bot):

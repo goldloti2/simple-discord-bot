@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from utils.utils import save_json
-from utils.log import logger, print_cmd, send_msg, send_err
+from utils.log import logger
 import utils.log as log
 
 class Misc(commands.Cog):
@@ -55,7 +55,7 @@ class Misc(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             err_msg = "recieve no arguments."
             message = ":x:`change_game` require 1 argument"
-            await send_err("change_game", message, err_msg, ctx)
+            await log.send_err("change_game", message, err_msg, ctx)
 
 
 def setup(bot):

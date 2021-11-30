@@ -10,6 +10,8 @@ def load_json(file = SETTING_FILE):
     return data
 
 def save_json(data, file = SETTING_FILE):
+    if not os.path.isdir(os.path.dirname(file)):
+        os.makedirs(os.path.dirname(file))
     with open(file, "w", encoding = "utf-8") as jfile:
         json.dump(data, jfile, indent = 4)
 
