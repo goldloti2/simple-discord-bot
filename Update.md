@@ -138,3 +138,5 @@
 2021/12/02
 
 - Split the update log from README.md
+- cmds/twitter.py
+  - Change timer interval to 1 min

@@ -25,7 +25,7 @@ class Twitter(commands.Cog):
         self.bot = bot
         self.__headers = {"Authorization": f"Bearer {self.bot.setting['TWITTER_TOKEN']}"}
         self.set_timer = True
-        self.timer_int = 3
+        self.timer_int = 1
         self.sub_json = {}
         self.TW_obj = {}
         
