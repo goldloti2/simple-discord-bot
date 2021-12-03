@@ -140,3 +140,12 @@
 - Split the update log from README.md
 - cmds/twitter.py
   - Change timer interval to 1 min
+
+2021/12/03
+
+- utils/log.py
+  - Modified function - ctx_send: avoid send empty message error
+- cog_core.py
+  - Modified init: catch ExtensionFailed when init and stop the bot
+- cmds/twitter.py
+  - When subscription is empty, stop the notifiers

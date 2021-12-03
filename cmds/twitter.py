@@ -24,7 +24,7 @@ class Twitter(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.__headers = {"Authorization": f"Bearer {self.bot.setting['TWITTER_TOKEN']}"}
-        self.set_timer = True
+        self.sub_cnt = 0
         self.timer_int = 1
         self.sub_json = {}
         self.TW_obj = {}
@@ -93,13 +93,14 @@ class Twitter(commands.Cog):
         user_num = f"{finded['user']}/{readed['user']}"
         query_num = f"{finded['query']}/{readed['query']}"
         logger.info(f"found {user_num} user, {query_num} query")
+        self.sub_cnt = finded['user'] + finded['query']
         
         async def update_timer():
             await self.bot.wait_until_ready()
             while not self.bot.is_closed():
                 await asyncio.sleep(self.timer_int * 60)
                 logger.debug("Timer awake")
-                if self.set_timer == True:
+                if self.sub_cnt > 0:
                     for guild in self.bot.guilds:
                         self.bot.loop.create_task(self.call_update(guild.id))
         
@@ -152,6 +153,7 @@ class Twitter(commands.Cog):
         logger.info(f"add user: @{args}, in {ctx.guild.name}#{ctx.channel}")
         self.sub_json[guild]["user"].append(user)
         self.TW_obj[guild]["user"].append(new_obj)
+        self.sub_cnt += 1
         message = f":white_check_mark:Subscribed: {response['name']}@{args}\n{home_url}"
         save_json(self.sub_json[guild], json_path(guild))
         return message
@@ -190,6 +192,7 @@ class Twitter(commands.Cog):
         logger.info(f"add query: \"{args}\", in {ctx.channel}")
         self.sub_json[guild]["query"].append(query)
         self.TW_obj[guild]["query"].append(new_obj)
+        self.sub_cnt += 1
         message = f":white_check_mark:subscribed: \"{args}\""
         save_json(self.sub_json[guild], json_path(guild))
         return message
@@ -267,9 +270,13 @@ class Twitter(commands.Cog):
             for i in sorted(no_ch, reverse = True):
                 self.sub_json[guild][sub_type].pop(i)
                 self.TW_obj[guild][sub_type].pop(i)
+            self.sub_cnt -= len(no_ch)
         
-        await asyncio.wait(all_tasks)
-        save_json(self.sub_json[guild], json_path(guild))
+        if len(all_tasks) > 0:
+            await asyncio.wait(all_tasks)
+            save_json(self.sub_json[guild], json_path(guild))
+        else:
+            await asyncio.sleep(1)
     
     '''
     command delete_user(args):
@@ -302,6 +309,7 @@ class Twitter(commands.Cog):
             return (message, err_msg)
         
         self.TW_obj[guild]["user"].pop(del_num)
+        self.sub_cnt -= 1
         username = self.sub_json[guild]["user"].pop(del_num)["username"]
         message = f":white_check_mark:Deubscribed: @{username}"
         save_json(self.sub_json[guild], json_path(guild))
@@ -345,6 +353,7 @@ class Twitter(commands.Cog):
             return (message, err_msg)
         
         self.TW_obj[guild]["query"].pop(del_num)
+        self.sub_cnt -= 1
         query = self.sub_json[guild]["query"].pop(del_num)["query"]
         message = f":white_check_mark:Deubscribed: \"{query}\""
         save_json(self.sub_json[guild], json_path(guild))

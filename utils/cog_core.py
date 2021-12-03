@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import os
+import sys
 
 from utils.log import logger
 import utils.log as log
@@ -21,7 +22,14 @@ class Cog_Core(commands.Cog):
         self.bot = bot
         self.check_cmds()
         for exts in self.list_exts:
-            self.bot.load_extension(ext_str(exts))
+            try:
+                self.bot.load_extension(ext_str(exts))
+            except commands.errors.ExtensionFailed as e:
+                logger.error(f"load {exts} failed. Bot shut down.")
+                logger.debug("\n", exc_info = True)
+                loop = self.bot.loop
+                loop.call_soon_threadsafe(loop.stop)
+                sys.exit()
     
     def check_cmds(self):
         list_exts = set()

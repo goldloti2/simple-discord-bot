@@ -54,6 +54,8 @@ async def send_err(cmd, message, err_msg, ctx):
     await ctx_send(head, message, ctx)
 
 async def ctx_send(head, message, ctx):
+    if message == "":
+        return
     try:
         await ctx.send(message)
     except discord.HTTPException as e:
