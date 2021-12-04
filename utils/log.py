@@ -5,40 +5,54 @@ import time
 import os
 
 
-filename = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) + ".log"
-fmt = logging.Formatter('[%(asctime)s]:[%(levelname)s]:%(name)s: %(message)s')
+def initlogger():
+    filename = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) + ".log"
+    fmt = logging.Formatter('[%(asctime)s]:[%(levelname)s]:%(name)s: %(message)s')
+    
+    if not os.path.isdir("log"):
+        os.mkdir("log")
 
-dis_log = logging.getLogger("discord")
-dis_log.setLevel(logging.DEBUG)
-filepath = os.path.join("log", "discord", filename)
-fh = TimedRotatingFileHandler(filename = filepath,
-                              when = "midnight",
-                              backupCount = 7,
-                              encoding = 'utf-8')
-fh.setLevel(logging.DEBUG)
-fh.setFormatter(fmt)
-dis_log.addHandler(fh)
+    dis_log_path = os.path.join("log", "discord")
+    if not os.path.isdir(dis_log_path):
+        os.mkdir(dis_log_path)
+    dis_log = logging.getLogger("discord")
+    dis_log.setLevel(logging.DEBUG)
+    filepath = os.path.join(dis_log_path, filename)
+    fh = TimedRotatingFileHandler(filename = filepath,
+                                when = "midnight",
+                                backupCount = 7,
+                                encoding = 'utf-8')
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(fmt)
+    dis_log.addHandler(fh)
 
-logger = logging.getLogger("logger")
-logger.setLevel(logging.DEBUG)
-filepath = os.path.join("log", filename)
-fh = TimedRotatingFileHandler(filename = filepath,
-                              when = "midnight",
-                              backupCount = 7,
-                              encoding = 'utf-8')
-fh.setLevel(logging.DEBUG)
-fh.setFormatter(fmt)
-logger.addHandler(fh)
-ch = logging.StreamHandler()
-ch.setLevel(logging.INFO)
-ch.setFormatter(fmt)
-logger.addHandler(ch)
+    logger = logging.getLogger("logger")
+    logger.setLevel(logging.DEBUG)
+    filepath = os.path.join("log", filename)
+    fh = TimedRotatingFileHandler(filename = filepath,
+                                when = "midnight",
+                                backupCount = 7,
+                                encoding = 'utf-8')
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(fmt)
+    logger.addHandler(fh)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    ch.setFormatter(fmt)
+    logger.addHandler(ch)
+
+    return logger
+
+def getlogger(name = "logger"):
+    return logging.getLogger(name)
 
 def logger_head(ctx, cmd, mode = "info"):
     if mode == "info":
         return f"@{ctx.guild.name}:({cmd})"
     elif mode == "err":
         return f"@{ctx.guild.name}:({cmd} error)"
+
+logger = getlogger()
 
 
 def print_cmd(cmd, args, ctx):
@@ -74,7 +88,10 @@ import functools
 def commandlog(func):
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
-        print_cmd(func.__name__, args[2:], args[1])
+        if len(kwargs) == 0:
+            print_cmd(func.__name__, args[2:], args[1])
+        else:
+            print_cmd(func.__name__, (kwargs["args"],), args[1])
         message = await func(*args, **kwargs)
         if isinstance(message, str):
             await send_msg(func.__name__, message, args[1])

@@ -7,8 +7,8 @@ import requests
 from twitter.twitter_class import Twitter_Timeline, Twitter_Recent
 from utils.utils import load_json, save_json
 
-from utils.log import logger
 import utils.log as log
+logger = log.getlogger()
 
 
 def json_path(guild, mode = "path"):

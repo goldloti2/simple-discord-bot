@@ -2,10 +2,10 @@ import discord
 from discord.ext import commands
 import os
 from shutil import rmtree
-from utils.log import logger
+import utils.log as log
 from utils.utils import load_json
 
-
+logger = log.initlogger()
 setting = load_json()
 
 bot = commands.Bot(command_prefix = setting["PREFIX"])

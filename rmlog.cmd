@@ -1,2 +1,2 @@
-del "log\*.log*"
-del "log\discord\*.log*"
+rmdir /s /q ".\log"
+mkdir "log"

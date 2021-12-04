@@ -3,8 +3,8 @@ from discord.ext import commands
 import os
 import sys
 
-from utils.log import logger
 import utils.log as log
+logger = log.getlogger()
 
 def ext_str(exts):
     return f"cmds.{exts}"

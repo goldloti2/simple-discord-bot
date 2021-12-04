@@ -149,3 +149,8 @@
   - Modified init: catch ExtensionFailed when init and stop the bot
 - cmds/twitter.py
   - When subscription is empty, stop the notifiers
+
+2021/12/04
+
+- Redisgn logger, now the main logger is called by function rather than import from utils/log.py
+- Also, required directories are created from code rather than shellscripts

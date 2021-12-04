@@ -5,8 +5,8 @@ import asyncio
 import requests
 import time
 
-from utils.log import logger
 import utils.log as log
+logger = log.getlogger()
 '''
 * Both asyncio.ensure_future() and loop.create_task() will add the coroutines
 to the loop

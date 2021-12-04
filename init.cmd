@@ -1,7 +1,5 @@
 @echo OFF
 
-if not exist log\discord mkdir log log\discord 
-
 if not exist settings\setting.json goto Initialize
 goto Already
 

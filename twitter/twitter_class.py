@@ -3,8 +3,8 @@ import json
 import asyncio
 from utils.utils import parse_twitter_msg
 
-from utils.log import logger
 import utils.log as log
+logger = log.getlogger()
 
 url_factory = {"timeline": "https://api.twitter.com/2/users/%s/tweets",
                "recent": "https://api.twitter.com/2/tweets/search/recent"}

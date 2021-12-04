@@ -1,8 +1,9 @@
 import discord
 from discord.ext import commands
 from utils.utils import save_json
-from utils.log import logger
+
 import utils.log as log
+logger = log.getlogger()
 
 class Misc(commands.Cog):
     @log.initlog

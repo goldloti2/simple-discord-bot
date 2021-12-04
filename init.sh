@@ -1,10 +1,5 @@
 #!/bin/bash
 
-if ![-d "log/discord"]
-then
-	mkdir log log/discord
-fi
-
 if ![-f "settings/setting.py"]
 then
     echo "Start initialize."
