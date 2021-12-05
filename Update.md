@@ -154,3 +154,10 @@
 
 - Redisgn logger, now the main logger is called by function rather than import from utils/log.py
 - Also, required directories are created from code rather than shellscripts
+
+2021/12/05
+
+- cmds/twitter.py
+  - Minor log change
+- utils/log.py
+  - Modified to accept more message type being sent, e.g. Embed

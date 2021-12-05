@@ -99,7 +99,7 @@ class Twitter(commands.Cog):
             await self.bot.wait_until_ready()
             while not self.bot.is_closed():
                 await asyncio.sleep(self.timer_int * 60)
-                logger.debug("Timer awake")
+                logger.debug("Twitter timer awake")
                 if self.sub_cnt > 0:
                     for guild in self.bot.guilds:
                         self.bot.loop.create_task(self.call_update(guild.id))

@@ -70,8 +70,10 @@ async def send_err(cmd, message, err_msg, ctx):
 async def ctx_send(head, message, ctx):
     if message == "":
         return
+    if isinstance(message, str):
+        message = {"content":message}
     try:
-        await ctx.send(message)
+        await ctx.send(**message)
     except discord.HTTPException as e:
         logger.warning(f"{head} response failed")
         logger.debug(str(e))
@@ -93,10 +95,10 @@ def commandlog(func):
         else:
             print_cmd(func.__name__, (kwargs["args"],), args[1])
         message = await func(*args, **kwargs)
-        if isinstance(message, str):
-            await send_msg(func.__name__, message, args[1])
-        else:
+        if isinstance(message, tuple):
             await send_err(func.__name__, message[0], message[1], args[1])
+        else:
+            await send_msg(func.__name__, message, args[1])
     return wrapper
 
 def initlog(func):
