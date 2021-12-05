@@ -3,6 +3,12 @@
 Just a simple discord bot that can search and push twitter message to your discord channel.  
 只是個簡單的discord機器人，可以定時上twitter搜尋，然後推播到discord頻道中  
 
+## Announcement
+
+Because discord.py is no longer being updated and will soon be outdated (2022/4 at the latest), this project will stop too.  
+However, since I was working on music bot cog at the half way when I know the news, I might keep update the cog on `dev` branch.  
+Also, I will try to find another library and porting this project.
+
 ## Features
 
 - Subscribe/Desubscribe to the Twitter accounts or Twitter search
