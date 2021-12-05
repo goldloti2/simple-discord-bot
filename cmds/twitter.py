@@ -369,7 +369,7 @@ class Twitter(commands.Cog):
     def cog_unload(self):
         if not self.timer_task.cancelled():
             self.timer_task.cancel()
-            logger.info("twitter timer removed")
+            logger.debug("Twitter timer removed")
         else:
             logger.error("twitter timer not found")
 
