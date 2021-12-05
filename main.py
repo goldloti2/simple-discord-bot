@@ -8,7 +8,9 @@ from utils.utils import load_json
 logger = log.initlogger()
 setting = load_json()
 
-bot = commands.Bot(command_prefix = setting["PREFIX"])
+intents = discord.Intents.default()
+intents.members = True
+bot = commands.Bot(command_prefix = setting["PREFIX"], intents = intents)
 bot.setting = setting
 
 

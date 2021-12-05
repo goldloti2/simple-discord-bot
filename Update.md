@@ -161,3 +161,18 @@
   - Minor log change
 - utils/log.py
   - Modified to accept more message type being sent, e.g. Embed
+
+---
+
+## dev Branch Update (After Announcement)
+
+2021/12/05
+
+- cmd/musicbot.py
+  - Function is_connected() - done
+  - Function search_yt() - done
+  - Function play_next() - self.vc.play() cannot play the music
+  - Coroutine inactive_timer() - done, sleep time needs to change when in actual use
+  - Function reset_timer() - done
+  - Command play() - done, but might have bugs
+  - Command stop() - temporary for disconnect from voice channel
