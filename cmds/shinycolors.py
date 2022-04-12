@@ -60,7 +60,7 @@ class ShinyColors(commands.Cog):
             latest_score = response.json()[0]["data"][-1]
             second_score = response.json()[0]["data"][-2]
             score_difference = int(latest_score['score']) - int(second_score['score'])
-            msg += f"{msg_head}:\n{latest_score['score']}\n@{latest_score['summaryTime'][:-3]}\n半小時增加:{score_difference}"
+            msg += f"{msg_head}:\n{latest_score['score']}\n@{latest_score['summaryTime'][:-3]}\n半小時增加:{score_difference}\n"
         
         await send_msg(self.console_msg, msg, self.channel)
 
