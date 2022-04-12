@@ -66,7 +66,7 @@ class Twitter_Timeline(Twitter_Class):
         self.url = self.url % self.sub_json["id"]
         self.username = self.sub_json["username"]
         self.params = {"exclude": "retweets",
-                       "max_results": 5,
+                       "max_results": 50,
                        "tweet.fields": "created_at"}
         self.console_msg = f"@{self.username} in {self.channel}"
         if "since_id" in self.sub_json.keys():
@@ -74,7 +74,7 @@ class Twitter_Timeline(Twitter_Class):
             self.ini = False
         else:
             self.loop.create_task(self.request())
-        self.params["max_results"] = 50
+        self.params["max_results"] = 100
     
     def response_proc(self, response):
         messages = []
@@ -93,7 +93,7 @@ class Twitter_Recent(Twitter_Class):
         self.sub_json = sub_json
         self.query = self.sub_json["query"]
         self.params = {"query": self.query,
-                       "max_results": 10,
+                       "max_results": 100,
                        "tweet.fields": "author_id,created_at",
                        "expansions": "author_id",
                        "user.fields": "username"}
@@ -103,7 +103,7 @@ class Twitter_Recent(Twitter_Class):
             self.ini = False
         else:
             self.loop.create_task(self.request())
-        self.params["max_results"] = 50
+        self.params["max_results"] = 100
     
     def response_proc(self, response):
         messages = []
