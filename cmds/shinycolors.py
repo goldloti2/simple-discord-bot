@@ -20,10 +20,10 @@ class ShinyColors(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.url_0 = "https://api.matsurihi.me/sc/v1/events/fanRanking/40008/rankings/logs/1/100"
-        self.url_1 = "https://api.matsurihi.me/sc/v1/events/fanRanking/40008/rankings/logs/3/10"
+        self.url_1 = "https://api.matsurihi.me/sc/v1/events/fanRanking/40008/rankings/logs/3/100"
         self.channel = self.bot.get_channel(897443905300201474)
         self.console_msg = "ShinyColors"
-        self.send_msg = ["真乃100位", "めぐる10位"]
+        self.send_msg = ["真乃100位", "めぐる100位"]
         
         async def update_timer():
             await self.bot.wait_until_ready()
@@ -59,11 +59,17 @@ class ShinyColors(commands.Cog):
                 return
             latest_score = response.json()[0]["data"][-1]
             second_score = response.json()[0]["data"][-2]
-            score_difference = int(latest_score['score'])-int(second_score['score']);
+            score_difference = int(latest_score['score']) - int(second_score['score'])
             msg += f"{msg_head}:\n{latest_score['score']}\n@{latest_score['summaryTime'][:-3]}\n半小時增加:{score_difference}"
         
         await send_msg(self.console_msg, msg, self.channel)
 
+    def cog_unload(self):
+        if not self.timer_task.cancelled():
+            self.timer_task.cancel()
+            logger.debug("Shinycolors timer removed")
+        else:
+            logger.error("Shinycolors timer not found")
 
 def setup(bot):
     bot.add_cog(ShinyColors(bot))
