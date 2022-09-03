@@ -374,5 +374,5 @@ class Twitter(commands.Cog):
             logger.error("twitter timer not found")
 
 
-def setup(bot):
-    bot.add_cog(Twitter(bot))
+async def setup(bot):
+    await bot.add_cog(Twitter(bot))

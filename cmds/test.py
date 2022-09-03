@@ -57,5 +57,5 @@ class Test(commands.Cog):
         await log.send_msg("request_url()", message, ctx)
 
 
-def setup(bot):
-    bot.add_cog(Test(bot))
+async def setup(bot):
+    await bot.add_cog(Test(bot))

@@ -21,9 +21,11 @@ class Cog_Core(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.check_cmds()
+    
+    async def init_load(self):
         for exts in self.list_exts:
             try:
-                self.bot.load_extension(ext_str(exts))
+                await self.bot.load_extension(ext_str(exts))
             except commands.errors.ExtensionFailed as e:
                 logger.error(f"load {exts} failed. Bot shut down.")
                 logger.debug("\n", exc_info = True)
@@ -185,5 +187,7 @@ class Cog_Core(commands.Cog):
         return message
 
 
-def setup(bot):
-    bot.add_cog(Cog_Core(bot))
+async def setup(bot):
+    cog_core = Cog_Core(bot)
+    await cog_core.init_load()
+    await bot.add_cog(cog_core)

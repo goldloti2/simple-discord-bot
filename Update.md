@@ -51,7 +51,7 @@
   - fixed \_\_init\_\_()
   - fixed command - subscribe_user(), subscribe_search()
   - added command - update(), subscribed()
-  - added function - call\_update() _(some bugs inside)_
+  - added function - call\_update() *(some bugs inside)*
   
 2021/06/19
 
@@ -66,7 +66,7 @@
 2021/06/20
 
 - Fix send message bugs in cog_core.py
-- Handle potential exceptions in main.py (except ctrl-c, _it seems like Windows problem?_)
+- Handle potential exceptions in main.py (except ctrl-c, *it seems like Windows problem?*)
 - Handle missing argument errors in cmds/misc.py and cmds/twitter.py
 - Add and change some logger messages
 - Working on delete subscription commands in cmds/twitter.py
@@ -161,3 +161,11 @@
   - Minor log change
 - utils/log.py
   - Modified to accept more message type being sent, e.g. Embed
+
+2022/09/04 v.2.0
+
+- upgrade Discord.py to 2.0.1
+  - bot.load_extension() and bot.add_cog() changed to *coroutine*
+- Work on list
+  - Change all commands to slash commands
+  - Twitter timer rework

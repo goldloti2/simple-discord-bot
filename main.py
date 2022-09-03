@@ -8,7 +8,7 @@ from utils.utils import load_json
 logger = log.initlogger()
 setting = load_json()
 
-bot = commands.Bot(command_prefix = setting["PREFIX"])
+bot = commands.Bot(command_prefix = setting["PREFIX"], intents = discord.Intents.all())
 bot.setting = setting
 
 
@@ -17,7 +17,7 @@ async def on_ready():
     game = discord.Game(bot.setting["GAME"])
     await bot.change_presence(status=discord.Status.idle, activity=game)
     try:
-        bot.load_extension("utils.cog_core")
+        await bot.load_extension("utils.cog_core")
     except commands.errors.ExtensionAlreadyLoaded:
         pass
     logger.info(f"logged in as {bot.user}, in {[g.name for g in bot.guilds]}")

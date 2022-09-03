@@ -5,9 +5,11 @@ Just a simple discord bot that can search and push twitter message to your disco
 
 ## Announcement
 
-Because discord.py is no longer being updated and will soon be outdated (2022/4 at the latest), this project will stop too.  
-However, since I was working on music bot cog at the half way when I know the news, I might keep update the cog on `dev` branch.  
-Also, I will try to find another library and porting this project.
+~~Because discord.py is no longer being updated and will soon be outdated (2022/4 at the latest), this project will stop too.~~  
+~~However, since I was working on music bot cog at the half way when I know the news, I might keep update the cog on `dev` branch.~~  
+~~Also, I will try to find another library and porting this project.~~  
+  
+2022/09/03: Devs of Discod.py decide to keep on developement, therefore this project can start again.
 
 ## Features
 
@@ -21,8 +23,8 @@ Also, I will try to find another library and porting this project.
 Python version: 3.8.2  
 Python 版本: 3.8.2  
   
-Package requirement: discord.py, requests  
-Package需求: discord.py, requests  
+Package requirement: discord.py (2.0.1 or later), requests  
+Package需求: discord.py (2.0.1 or later), requests  
   
 or just run following commands:  
 或是直接執行下列命令:  
