@@ -162,10 +162,18 @@
 - utils/log.py
   - Modified to accept more message type being sent, e.g. Embed
 
-2022/09/04 v.2.0
+2022/09/03 v.2.0
 
 - upgrade Discord.py to 2.0.1
   - bot.load_extension() and bot.add_cog() changed to *coroutine*
 - Work on list
   - Change all commands to slash commands
   - Twitter timer rework
+
+2022/09/04
+
+- revise coding style
+  - reorder import by alphabet
+  - rename initlogger(), getlogger() to init_logger(), get_logger()
+  - rename Twitter_Class, Twitter_Timeline, Twitter_Recent to TwitterClass, TwitterTimeline, TwitterRecent
+  - rename TW_obj to twitter_obj

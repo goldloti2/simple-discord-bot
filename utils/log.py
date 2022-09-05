@@ -1,11 +1,12 @@
 import discord
+import functools
 import logging
 from logging.handlers import TimedRotatingFileHandler
-import time
 import os
+import time
 
 
-def initlogger():
+def init_logger():
     filename = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) + ".log"
     fmt = logging.Formatter('[%(asctime)s]:[%(levelname)s]:%(name)s: %(message)s')
     
@@ -43,7 +44,7 @@ def initlogger():
 
     return logger
 
-def getlogger(name = "logger"):
+def get_logger(name = "logger"):
     return logging.getLogger(name)
 
 def logger_head(ctx, cmd, mode = "info"):
@@ -52,7 +53,7 @@ def logger_head(ctx, cmd, mode = "info"):
     elif mode == "err":
         return f"@{ctx.guild.name}:({cmd} error)"
 
-logger = getlogger()
+logger = get_logger()
 
 
 def print_cmd(cmd, args, ctx):
@@ -84,8 +85,6 @@ async def ctx_send(head, message, ctx):
         logger.debug(f"{head} response success")
     logger.debug(f"\n{message}")
 
-
-import functools
 
 def commandlog(func):
     @functools.wraps(func)

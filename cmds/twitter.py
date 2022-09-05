@@ -1,14 +1,12 @@
-import discord
+import asyncio
 from discord.ext import commands
 import os
-import json
-import asyncio
 import requests
-from twitter.twitter_class import Twitter_Timeline, Twitter_Recent
+from twitter.twitter_class import TwitterTimeline, TwitterRecent
+import utils.log as log
 from utils.utils import load_json, save_json
 
-import utils.log as log
-logger = log.getlogger()
+logger = log.get_logger()
 
 
 def json_path(guild, mode = "path"):
@@ -27,10 +25,10 @@ class Twitter(commands.Cog):
         self.sub_cnt = 0
         self.timer_int = 1
         self.sub_json = {}
-        self.TW_obj = {}
+        self.twitter_obj = {}
         
         '''
-        sub_json (in TW_obj, elements in "user" and "query" are Twitter_Class object):
+        sub_json (in twitter_obj, elements in "user" and "query" are TwitterClass object):
         {
             <guild id>: {
                 "user": [
@@ -58,13 +56,13 @@ class Twitter(commands.Cog):
         readed = {"user":0, "query":0}
         finded = {"user":0, "query":0}
         for guild in self.bot.guilds:
-            self.TW_obj[guild.id] = {}
+            self.twitter_obj[guild.id] = {}
             try:
                 sub_json = load_json(json_path(guild.id))
             except:
                 sub_json = {"user": [], "query": []}
             
-            '''check and create Twitter_Timeline objects'''
+            '''check and create TwitterTimeline objects'''
             for sub_type in sub_json:
                 readed[sub_type] += len(sub_json[sub_type])
                 removes = []
@@ -73,9 +71,9 @@ class Twitter(commands.Cog):
                     channel = self.bot.get_channel(sub["ch_id"])
                     if channel != None:
                         if sub_type == "user":
-                            twitter_cls = Twitter_Timeline
+                            twitter_cls = TwitterTimeline
                         else:
-                            twitter_cls = Twitter_Recent
+                            twitter_cls = TwitterRecent
                         tmp = twitter_cls(sub,
                                           self.__headers,
                                           channel,
@@ -86,7 +84,7 @@ class Twitter(commands.Cog):
                 for rm in removes:
                     sub_json[sub_type].remove(rm)
                 finded[sub_type] += len(objs)
-                self.TW_obj[guild.id][sub_type] = objs
+                self.twitter_obj[guild.id][sub_type] = objs
                 
             self.sub_json[guild.id] = sub_json
             save_json(sub_json, json_path(guild.id))
@@ -117,7 +115,7 @@ class Twitter(commands.Cog):
         function:
             try subscribe to the specific Twitter user in the current channel.
             the Twitter user can only be subscribed in 1 channel.
-            on success, self.TW_obj["user"] and the json file will be updated.
+            on success, self.twitter_obj["user"] and the json file will be updated.
     '''
     @commands.command(aliases = ["sub_user", "su", "SU"],
                       help = "Subscribe to the Twitter user if found.\n"
@@ -146,13 +144,13 @@ class Twitter(commands.Cog):
         user = {"username": args,
                 "id": response["id"],
                 "ch_id": ctx.channel.id}
-        new_obj = Twitter_Timeline(user,
-                                   self.__headers,
-                                   ctx.channel,
-                                   self.bot.loop)
+        new_obj = TwitterTimeline(user,
+                                  self.__headers,
+                                  ctx.channel,
+                                  self.bot.loop)
         logger.info(f"add user: @{args}, in {ctx.guild.name}#{ctx.channel}")
         self.sub_json[guild]["user"].append(user)
-        self.TW_obj[guild]["user"].append(new_obj)
+        self.twitter_obj[guild]["user"].append(new_obj)
         self.sub_cnt += 1
         message = f":white_check_mark:Subscribed: {response['name']}@{args}\n{home_url}"
         save_json(self.sub_json[guild], json_path(guild))
@@ -173,7 +171,7 @@ class Twitter(commands.Cog):
             ":white_check_mark:Subscribed: \"{args}\""
         function:
             try subscribe to the specific Twitter search query in the current channel.
-            self.TW_obj["query"], self.sub_json["query"] and the json file will be updated.
+            self.twitter_obj["query"], self.sub_json["query"] and the json file will be updated.
     '''
     @commands.command(aliases = ["sub_search", "ss", "SS"],
                       help = "Subscribe to the tweets can be found with the given query line.\n"
@@ -185,13 +183,13 @@ class Twitter(commands.Cog):
         guild = ctx.guild.id
         query = {"query": args,
                  "ch_id": ctx.channel.id}
-        new_obj = Twitter_Recent(query,
-                                 self.__headers,
-                                 ctx.channel,
-                                 self.bot.loop)
+        new_obj = TwitterRecent(query,
+                                self.__headers,
+                                ctx.channel,
+                                self.bot.loop)
         logger.info(f"add query: \"{args}\", in {ctx.channel}")
         self.sub_json[guild]["query"].append(query)
-        self.TW_obj[guild]["query"].append(new_obj)
+        self.twitter_obj[guild]["query"].append(new_obj)
         self.sub_cnt += 1
         message = f":white_check_mark:subscribed: \"{args}\""
         save_json(self.sub_json[guild], json_path(guild))
@@ -254,9 +252,9 @@ class Twitter(commands.Cog):
     
     async def call_update(self, guild):
         all_tasks = []
-        for sub_type in self.TW_obj[guild]:
+        for sub_type in self.twitter_obj[guild]:
             no_ch = []
-            for i, sub in enumerate(self.TW_obj[guild][sub_type]):
+            for i, sub in enumerate(self.twitter_obj[guild][sub_type]):
                 if self.bot.get_channel(sub.channel.id) != None:
                     all_tasks.append(self.bot.loop.create_task(sub.request()))
                 else:
@@ -269,7 +267,7 @@ class Twitter(commands.Cog):
                     logger.warning(warn_msg)
             for i in sorted(no_ch, reverse = True):
                 self.sub_json[guild][sub_type].pop(i)
-                self.TW_obj[guild][sub_type].pop(i)
+                self.twitter_obj[guild][sub_type].pop(i)
             self.sub_cnt -= len(no_ch)
         
         if len(all_tasks) > 0:
@@ -286,7 +284,7 @@ class Twitter(commands.Cog):
             ":white_check_mark:Deubscribed: @{username}"
         function:
             delete the subscription to the specific user.
-            on success, self.TW_obj["user"], self.sub_json["user"] and the json file will be updated.
+            on success, self.twitter_obj["user"], self.sub_json["user"] and the json file will be updated.
     '''
     @commands.command(aliases = ["del_user", "du", "DU"],
                       help = "Delete the Subscription of the Twitter user with the given id\n"
@@ -303,12 +301,12 @@ class Twitter(commands.Cog):
             message = ":x:`delete_user` require integer as argument"
             return (message, err_msg)
         
-        if del_num >= len(self.TW_obj[guild]["user"]):
+        if del_num >= len(self.twitter_obj[guild]["user"]):
             err_msg = f"index out of bound: {del_num}"
             message = ":x:index out of bound"
             return (message, err_msg)
         
-        self.TW_obj[guild]["user"].pop(del_num)
+        self.twitter_obj[guild]["user"].pop(del_num)
         self.sub_cnt -= 1
         username = self.sub_json[guild]["user"].pop(del_num)["username"]
         message = f":white_check_mark:Deubscribed: @{username}"
@@ -330,7 +328,7 @@ class Twitter(commands.Cog):
             ":white_check_mark:Deubscribed: \"{query}\""
         function:
             delete the subscription to the specific search query.
-            on success, self.TW_obj["query"], self.sub_json["query"] and the json file will be updated.
+            on success, self.twitter_obj["query"], self.sub_json["query"] and the json file will be updated.
     '''
     @commands.command(aliases = ["del_search", "ds", "DS"],
                       help = "Delete the Subscription of the Twitter search with the given id\n"
@@ -347,12 +345,12 @@ class Twitter(commands.Cog):
             message = ":x:`delete_search` require integer as argument"
             return (message, err_msg)
         
-        if del_num >= len(self.TW_obj[guild]["query"]):
+        if del_num >= len(self.twitter_obj[guild]["query"]):
             err_msg = f"index out of bound: {del_num}"
             message = ":x:index out of bound"
             return (message, err_msg)
         
-        self.TW_obj[guild]["query"].pop(del_num)
+        self.twitter_obj[guild]["query"].pop(del_num)
         self.sub_cnt -= 1
         query = self.sub_json[guild]["query"].pop(del_num)["query"]
         message = f":white_check_mark:Deubscribed: \"{query}\""

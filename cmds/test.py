@@ -1,12 +1,12 @@
+import asyncio
 import discord
 from discord.ext import commands
 import json
-import asyncio
 import requests
 import time
-
 import utils.log as log
-logger = log.getlogger()
+
+logger = log.get_logger()
 '''
 * Both asyncio.ensure_future() and loop.create_task() will add the coroutines
 to the loop

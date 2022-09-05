@@ -1,10 +1,9 @@
-import discord
 from discord.ext import commands
 import os
 import sys
-
 import utils.log as log
-logger = log.getlogger()
+
+logger = log.get_logger()
 
 def ext_str(exts):
     return f"cmds.{exts}"

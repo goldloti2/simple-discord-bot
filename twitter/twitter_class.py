@@ -1,15 +1,13 @@
 import requests
-import json
-import asyncio
+import utils.log as log
 from utils.utils import parse_twitter_msg
 
-import utils.log as log
-logger = log.getlogger()
+logger = log.get_logger()
 
 url_factory = {"timeline": "https://api.twitter.com/2/users/%s/tweets",
                "recent": "https://api.twitter.com/2/tweets/search/recent"}
 
-class Twitter_Class():
+class TwitterClass():
     def __init__(self, api, headers, channel, loop):
         self.url = url_factory[api]
         self.__headers = headers
@@ -59,7 +57,7 @@ class Twitter_Class():
 
 
 
-class Twitter_Timeline(Twitter_Class):
+class TwitterTimeline(TwitterClass):
     def __init__(self, sub_json, headers, channel, loop):
         super().__init__("timeline", headers, channel, loop)
         self.sub_json = sub_json
@@ -87,7 +85,7 @@ class Twitter_Timeline(Twitter_Class):
 
 
 
-class Twitter_Recent(Twitter_Class):
+class TwitterRecent(TwitterClass):
     def __init__(self, sub_json, headers, channel, loop):
         super().__init__("recent", headers, channel, loop)
         self.sub_json = sub_json

@@ -5,7 +5,7 @@ from shutil import rmtree
 import utils.log as log
 from utils.utils import load_json
 
-logger = log.initlogger()
+logger = log.init_logger()
 setting = load_json()
 
 bot = commands.Bot(command_prefix = setting["PREFIX"], intents = discord.Intents.all())
