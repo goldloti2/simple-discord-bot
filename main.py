@@ -1,3 +1,4 @@
+import asyncio
 import discord
 from discord.ext import commands
 import os
@@ -5,7 +6,8 @@ from shutil import rmtree
 import utils.log as log
 from utils.utils import load_json
 
-logger = log.init_logger()
+log.init_logger()
+logger = log.get_logger()
 setting = load_json()
 
 bot = commands.Bot(command_prefix = setting["PREFIX"], intents = discord.Intents.all())
@@ -15,11 +17,7 @@ bot.setting = setting
 @bot.event
 async def on_ready():
     game = discord.Game(bot.setting["GAME"])
-    await bot.change_presence(status=discord.Status.idle, activity=game)
-    try:
-        await bot.load_extension("utils.cog_core")
-    except commands.errors.ExtensionAlreadyLoaded:
-        pass
+    await bot.change_presence(status = discord.Status.idle, activity = game)
     logger.info(f"logged in as {bot.user}, in {[g.name for g in bot.guilds]}")
 
 @bot.event
@@ -41,9 +39,14 @@ async def on_command_error(ctx, error):
         logger.error(error)
 
 
-def main():
+async def main():
     logger.info("bot start...")
-    bot.run(bot.setting["DC_TOKEN"])
+    async with bot:
+        try:
+            await bot.load_extension("utils.cog_core")
+        except commands.errors.ExtensionAlreadyLoaded:
+            pass
+        await bot.start(bot.setting["DC_TOKEN"])
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

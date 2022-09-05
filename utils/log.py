@@ -16,6 +16,7 @@ def init_logger():
     dis_log_path = os.path.join("log", "discord")
     if not os.path.isdir(dis_log_path):
         os.mkdir(dis_log_path)
+
     dis_log = logging.getLogger("discord")
     dis_log.setLevel(logging.DEBUG)
     filepath = os.path.join(dis_log_path, filename)
@@ -41,8 +42,6 @@ def init_logger():
     ch.setLevel(logging.INFO)
     ch.setFormatter(fmt)
     logger.addHandler(ch)
-
-    return logger
 
 def get_logger(name = "logger"):
     return logging.getLogger(name)

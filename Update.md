@@ -177,3 +177,7 @@
   - rename initlogger(), getlogger() to init_logger(), get_logger()
   - rename Twitter_Class, Twitter_Timeline, Twitter_Recent to TwitterClass, TwitterTimeline, TwitterRecent
   - rename TW_obj to twitter_obj
+
+2022/09/05
+
+- change bot start method: from bot.run() to bot.start()
