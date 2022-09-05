@@ -1,5 +1,5 @@
 import asyncio
-from discord.ext import commands
+from discord.ext import commands, tasks
 import os
 import requests
 from twitter.twitter_class import TwitterTimeline, TwitterRecent
@@ -7,6 +7,7 @@ import utils.log as log
 from utils.utils import load_json, save_json
 
 logger = log.get_logger()
+timer_int = 1
 
 
 def json_path(guild, mode = "path"):
@@ -23,10 +24,26 @@ class Twitter(commands.Cog):
         self.bot = bot
         self.__headers = {"Authorization": f"Bearer {self.bot.setting['TWITTER_TOKEN']}"}
         self.sub_cnt = 0
-        self.timer_int = 1
         self.sub_json = {}
         self.twitter_obj = {}
+        timer = self.update_timer.start()
+        if timer != None:
+            logger.debug(f"Set timer success:{timer_int} min")
+        else:
+            logger.error("set timer failed")
+    
+    @tasks.loop(minutes = timer_int)
+    async def update_timer(self):
+        if not self.bot.is_closed():
+            logger.debug("Twitter timer awake")
+            all_tasks = []
+            if self.sub_cnt > 0:
+                for guild in self.bot.guilds:
+                    all_tasks.append(self.call_update(guild.id))
+                await asyncio.gather(*all_tasks)
         
+    @update_timer.before_loop
+    async def init_load(self):
         '''
         sub_json (in twitter_obj, elements in "user" and "query" are TwitterClass object):
         {
@@ -53,6 +70,7 @@ class Twitter(commands.Cog):
         }
         '''
         
+        await self.bot.wait_until_ready()
         readed = {"user":0, "query":0}
         finded = {"user":0, "query":0}
         for guild in self.bot.guilds:
@@ -92,18 +110,6 @@ class Twitter(commands.Cog):
         query_num = f"{finded['query']}/{readed['query']}"
         logger.info(f"found {user_num} user, {query_num} query")
         self.sub_cnt = finded['user'] + finded['query']
-        
-        async def update_timer():
-            await self.bot.wait_until_ready()
-            while not self.bot.is_closed():
-                await asyncio.sleep(self.timer_int * 60)
-                logger.debug("Twitter timer awake")
-                if self.sub_cnt > 0:
-                    for guild in self.bot.guilds:
-                        self.bot.loop.create_task(self.call_update(guild.id))
-        
-        self.timer_task = self.bot.loop.create_task(update_timer())
-        logger.debug(f"Set timer:{self.timer_int} min")
     
     '''
     command subscribe_user(args):
@@ -256,7 +262,7 @@ class Twitter(commands.Cog):
             no_ch = []
             for i, sub in enumerate(self.twitter_obj[guild][sub_type]):
                 if self.bot.get_channel(sub.channel.id) != None:
-                    all_tasks.append(self.bot.loop.create_task(sub.request()))
+                    all_tasks.append(sub.request())
                 else:
                     no_ch.append(i)
                     warn_msg = f"Can't find #{sub.channel.name}, delete "
@@ -271,7 +277,7 @@ class Twitter(commands.Cog):
             self.sub_cnt -= len(no_ch)
         
         if len(all_tasks) > 0:
-            await asyncio.wait(all_tasks)
+            await asyncio.gather(*all_tasks)
             save_json(self.sub_json[guild], json_path(guild))
         else:
             await asyncio.sleep(1)
@@ -363,10 +369,10 @@ class Twitter(commands.Cog):
             err_msg = "recieve no arguments."
             message = ":x:`delete_search` require 1 argument"
             await log.send_err("delete_search", message, err_msg, ctx)
-    
+
     def cog_unload(self):
-        if not self.timer_task.cancelled():
-            self.timer_task.cancel()
+        if not self.update_timer.is_being_cancelled():
+            self.update_timer.cancel()
             logger.debug("Twitter timer removed")
         else:
             logger.error("twitter timer not found")

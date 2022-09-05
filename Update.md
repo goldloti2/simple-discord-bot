@@ -168,7 +168,7 @@
   - bot.load_extension() and bot.add_cog() changed to *coroutine*
 - Work on list
   - Change all commands to slash commands
-  - Twitter timer rework
+  - ~~Twitter timer rework~~ *done at 2022/09/05-2*
 
 2022/09/04
 
@@ -178,6 +178,16 @@
   - rename Twitter_Class, Twitter_Timeline, Twitter_Recent to TwitterClass, TwitterTimeline, TwitterRecent
   - rename TW_obj to twitter_obj
 
-2022/09/05
+2022/09/05 - 1
 
 - change bot start method: from bot.run() to bot.start()
+
+2022/09/05 - 2
+
+- cmds/twitter.py
+  - timer rework: use discord.ext.tasks
+  - reduce the use of self.bot.loop
+  - fix subscribe.json not loaded bug: caused by loading cog before bot login
+
+- utils/cog_core.py
+  - fix "load_extension, unload_extension, reload_extension were never awaited"

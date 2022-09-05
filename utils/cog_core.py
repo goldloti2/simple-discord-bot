@@ -68,7 +68,7 @@ class Cog_Core(commands.Cog):
                     ":x:Extension not found"]
         for exts in args_exts:
             try:
-                self.bot.load_extension(ext_str(exts))
+                await self.bot.load_extension(ext_str(exts))
             except commands.errors.ExtensionAlreadyLoaded as e:
                 exts_stat[1].add(exts)
                 logger.warning(e.args[0])
@@ -111,7 +111,7 @@ class Cog_Core(commands.Cog):
                     ":x:Extension not loaded"]
         for exts in args_exts:
             try:
-                self.bot.unload_extension(ext_str(exts))
+                await self.bot.unload_extension(ext_str(exts))
             except commands.errors.ExtensionNotLoaded as e:
                 exts_stat[1].add(exts)
                 logger.warning(e.args[0])
@@ -153,7 +153,7 @@ class Cog_Core(commands.Cog):
                     ":x:Extension not loaded"]
         for exts in args_exts:
             try:
-                self.bot.reload_extension(ext_str(exts))
+                await self.bot.reload_extension(ext_str(exts))
             except commands.errors.ExtensionAlreadyLoaded as e:
                 exts_stat[1].add(exts)
                 logger.warning(e.args[0])
