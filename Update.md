@@ -191,3 +191,7 @@
 
 - utils/cog_core.py
   - fix "load_extension, unload_extension, reload_extension were never awaited"
+
+2022/09/06 v.2.1
+
+- replace **requests** with **httpx**, which supports async

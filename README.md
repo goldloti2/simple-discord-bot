@@ -23,8 +23,9 @@ Just a simple discord bot that can search and push twitter message to your disco
 Python version: 3.8.2  
 Python 版本: 3.8.2  
   
-Package requirement: discord.py (2.0.1 or later), requests  
-Package需求: discord.py (2.0.1 or later), requests  
+Package requirement: discord.py (2.0.1 or later), ~~requests~~, httpx  
+Package需求: discord.py (2.0.1 or later), ~~requests~~, httpx  
+*\*2022/09/06: replace **requests** with **httpx**, which supports async*  
   
 or just run following commands:  
 或是直接執行下列命令:  

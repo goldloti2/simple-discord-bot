@@ -1,4 +1,4 @@
-import requests
+import httpx
 import utils.log as log
 from utils.utils import parse_twitter_msg
 
@@ -8,36 +8,33 @@ url_factory = {"timeline": "https://api.twitter.com/2/users/%s/tweets",
                "recent": "https://api.twitter.com/2/tweets/search/recent"}
 
 class TwitterClass():
-    def __init__(self, api, headers, channel, loop):
+    def __init__(self, api, headers, channel):
         self.url = url_factory[api]
         self.__headers = headers
         self.channel = channel
-        self.loop = loop
         self.ini = True
     
     def response_proc(self, response):
         raise NotImplementedError
     
-    def req(self):
-        return requests.get(self.url,
-                            headers = self.__headers,
-                            params = self.params)
-    
-    async def request(self):
+    async def request(self, client):
         logger.debug(f"request: {self.console_msg}")
         try:
-            response = await self.loop.run_in_executor(None, self.req)
-        except requests.exceptions.ConnectionError as e:
-            logger.warning(f"request failed")
+            response = await client.get(self.url,
+                                        headers = self.__headers,
+                                        params = self.params)
+            response.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            logger.error(f"failed {self.console_msg}: {response.status_code}")
+            logger.debug(str(e))
+            return
+        except httpx.HTTPError as e:
+            logger.warning(f"request failed: {e.request.url}")
             logger.debug(str(e))
             return
         except:
             logger.error(f"request error")
             logger.debug("\n", exc_info = True)
-            return
-        if response.status_code != 200:
-            logger.error(f"failed {self.console_msg}: {response.status_code}")
-            logger.debug(response.text)
             return
         res_json = response.json()
         
@@ -49,6 +46,7 @@ class TwitterClass():
         
         if self.ini == True:
             self.ini = False
+            self.params["max_results"] = 100
             return
         
         messages = self.response_proc(res_json)
@@ -58,21 +56,18 @@ class TwitterClass():
 
 
 class TwitterTimeline(TwitterClass):
-    def __init__(self, sub_json, headers, channel, loop):
-        super().__init__("timeline", headers, channel, loop)
+    def __init__(self, sub_json, headers, channel):
+        super().__init__("timeline", headers, channel)
         self.sub_json = sub_json
         self.url = self.url % self.sub_json["id"]
         self.username = self.sub_json["username"]
         self.params = {"exclude": "retweets",
-                       "max_results": 50,
+                       "max_results": 5,
                        "tweet.fields": "created_at"}
         self.console_msg = f"@{self.username} in {self.channel}"
         if "since_id" in self.sub_json.keys():
             self.params["since_id"] = self.sub_json["since_id"]
             self.ini = False
-        else:
-            self.loop.create_task(self.request())
-        self.params["max_results"] = 100
     
     def response_proc(self, response):
         messages = []
@@ -86,12 +81,12 @@ class TwitterTimeline(TwitterClass):
 
 
 class TwitterRecent(TwitterClass):
-    def __init__(self, sub_json, headers, channel, loop):
-        super().__init__("recent", headers, channel, loop)
+    def __init__(self, sub_json, headers, channel):
+        super().__init__("recent", headers, channel)
         self.sub_json = sub_json
         self.query = self.sub_json["query"]
         self.params = {"query": self.query,
-                       "max_results": 100,
+                       "max_results": 20,
                        "tweet.fields": "author_id,created_at",
                        "expansions": "author_id",
                        "user.fields": "username"}
@@ -99,9 +94,6 @@ class TwitterRecent(TwitterClass):
         if "since_id" in self.sub_json.keys():
             self.params["since_id"] = self.sub_json["since_id"]
             self.ini = False
-        else:
-            self.loop.create_task(self.request())
-        self.params["max_results"] = 100
     
     def response_proc(self, response):
         messages = []

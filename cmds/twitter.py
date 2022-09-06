@@ -1,7 +1,8 @@
 import asyncio
 from discord.ext import commands, tasks
+import httpx
 import os
-import requests
+# import requests
 from twitter.twitter_class import TwitterTimeline, TwitterRecent
 import utils.log as log
 from utils.utils import load_json, save_json
@@ -38,9 +39,10 @@ class Twitter(commands.Cog):
             logger.debug("Twitter timer awake")
             all_tasks = []
             if self.sub_cnt > 0:
-                for guild in self.bot.guilds:
-                    all_tasks.append(self.call_update(guild.id))
-                await asyncio.gather(*all_tasks)
+                async with httpx.AsyncClient() as client:
+                    for guild in self.bot.guilds:
+                        all_tasks.append(self.call_update(guild.id, client))
+                    await asyncio.gather(*all_tasks)
         
     @update_timer.before_loop
     async def init_load(self):
@@ -94,8 +96,7 @@ class Twitter(commands.Cog):
                             twitter_cls = TwitterRecent
                         tmp = twitter_cls(sub,
                                           self.__headers,
-                                          channel,
-                                          self.bot.loop)
+                                          channel)
                         objs.append(tmp)
                     else:
                         removes.append(sub)
@@ -141,7 +142,7 @@ class Twitter(commands.Cog):
         user_fields = "user.fields=id,name"
         url = f"https://api.twitter.com/2/users/by?usernames={args}&{user_fields}"
         home_url = f"https://twitter.com/{args}"
-        response = requests.get(url, headers = self.__headers)
+        response = httpx.get(url, headers = self.__headers)
         if response.status_code != 200:
             err_msg = "can't find user"
             message = f":x:Can't find the user @{args}"
@@ -152,8 +153,7 @@ class Twitter(commands.Cog):
                 "ch_id": ctx.channel.id}
         new_obj = TwitterTimeline(user,
                                   self.__headers,
-                                  ctx.channel,
-                                  self.bot.loop)
+                                  ctx.channel)
         logger.info(f"add user: @{args}, in {ctx.guild.name}#{ctx.channel}")
         self.sub_json[guild]["user"].append(user)
         self.twitter_obj[guild]["user"].append(new_obj)
@@ -191,8 +191,7 @@ class Twitter(commands.Cog):
                  "ch_id": ctx.channel.id}
         new_obj = TwitterRecent(query,
                                 self.__headers,
-                                ctx.channel,
-                                self.bot.loop)
+                                ctx.channel)
         logger.info(f"add query: \"{args}\", in {ctx.channel}")
         self.sub_json[guild]["query"].append(query)
         self.twitter_obj[guild]["query"].append(new_obj)
@@ -254,15 +253,16 @@ class Twitter(commands.Cog):
                       brief = "Force checking update")
     async def update(self, ctx):
         log.print_cmd("update", (), ctx)
-        await self.call_update(ctx.guild.id)
+        async with httpx.AsyncClient() as client:
+            await self.call_update(ctx.guild.id, client)
     
-    async def call_update(self, guild):
+    async def call_update(self, guild, client):
         all_tasks = []
         for sub_type in self.twitter_obj[guild]:
             no_ch = []
             for i, sub in enumerate(self.twitter_obj[guild][sub_type]):
                 if self.bot.get_channel(sub.channel.id) != None:
-                    all_tasks.append(sub.request())
+                    all_tasks.append(sub.request(client))
                 else:
                     no_ch.append(i)
                     warn_msg = f"Can't find #{sub.channel.name}, delete "
