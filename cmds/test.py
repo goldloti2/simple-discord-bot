@@ -18,12 +18,12 @@ to the loop
 
 class Test(commands.Cog):
     @log.initlog
-    def __init__(self, bot):
+    def __init__(self, bot: commands.bot):
         self.bot = bot
     
     @commands.command(hidden = True)
     @log.commandlog
-    async def pong(self, ctx, *args):
+    async def pong(self, ctx: commands.context, *args):
         start_time = time.time()
         self.loop = asyncio.get_running_loop()
         tasks = [asyncio.ensure_future(self.request_url(i, start_time, ctx))\
@@ -35,7 +35,7 @@ class Test(commands.Cog):
     
     @commands.command(hidden = True)
     @log.commandlog
-    async def pong2(self, ctx):
+    async def pong2(self, ctx: commands.context):
         start_time = time.time()
         self.loop = asyncio.get_running_loop()
         for i in range(5):
@@ -43,11 +43,11 @@ class Test(commands.Cog):
         message = f"end time: {time.time() - start_time:.5f} sec. {id(self.loop)}"
         return message
     
-    async def call_pong2(self, ctx):
+    async def call_pong2(self, ctx: commands.context):
         message = "This is pong2()"
         await log.send_msg("call_pong2()", message, ctx)
     
-    async def request_url(self, num, start_time, ctx):
+    async def request_url(self, num: int, start_time: float, ctx: commands.context):
         url = 'https://www.google.com.tw/search'
         t1 = time.time()
         # res = await self.loop.run_in_executor(None, lambda: requests.get(url, params = {"q": "python"}))
@@ -60,7 +60,7 @@ class Test(commands.Cog):
     
     @commands.command(hidden = True)
     @log.commandlog
-    async def pong3(self, ctx):
+    async def pong3(self, ctx: commands.context):
         start_time = time.time()
         async with httpx.AsyncClient() as client:
             tasks = []
@@ -70,7 +70,7 @@ class Test(commands.Cog):
         message = f"end time: {time.time() - start_time:.5f} sec."
         return message
     
-    async def request_url2(self, num, start_time, client, ctx):
+    async def request_url2(self, num: int, start_time: float, client: httpx.AsyncClient, ctx: commands.context):
         url = "https://www.youtube.com/watch"#'https://www.google.com.tw/search'
         t1 = time.time()
         res = await client.get(url = url, params = {"v": "Gdx4UwxeOik"})#{"q": "python"})
@@ -81,5 +81,5 @@ class Test(commands.Cog):
         await log.send_msg("request_url()", message, ctx)
 
 
-async def setup(bot):
+async def setup(bot: commands.bot):
     await bot.add_cog(Test(bot))

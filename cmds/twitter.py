@@ -11,7 +11,7 @@ logger = log.get_logger()
 timer_int = 1
 
 
-def json_path(guild, mode = "path"):
+def json_path(guild: int, mode = "path"):
     paths = ["settings", "subscribe.json"]
     if mode == "path":
         return os.path.join(paths[0], str(guild), paths[1])
@@ -21,7 +21,7 @@ def json_path(guild, mode = "path"):
 
 class Twitter(commands.Cog):
     @log.initlog
-    def __init__(self, bot):
+    def __init__(self, bot: commands.bot):
         self.bot = bot
         self.__headers = {"Authorization": f"Bearer {self.bot.setting['TWITTER_TOKEN']}"}
         self.sub_cnt = 0
@@ -131,7 +131,7 @@ class Twitter(commands.Cog):
                       brief = "Subscribe to the Twitter user",
                       usage = "<username>")
     @log.commandlog
-    async def subscribe_user(self, ctx, args):
+    async def subscribe_user(self, ctx: commands.context, args: str):
         guild = ctx.guild.id
         for exist_user in self.sub_json[guild]["user"]:
             if exist_user["username"] == args:
@@ -163,7 +163,7 @@ class Twitter(commands.Cog):
         return message
     
     @subscribe_user.error
-    async def subscribe_user_error(self, ctx, error):
+    async def subscribe_user_error(self, ctx: commands.context, error: commands.CommandError):
         if isinstance(error, commands.MissingRequiredArgument):
             err_msg = "recieve no arguments."
             message = ":x:`subscribe_user` require 1 argument"
@@ -185,7 +185,7 @@ class Twitter(commands.Cog):
                       brief = "Subscribe to the Twitter search",
                       usage = "<query>")
     @log.commandlog
-    async def subscribe_search(self, ctx, *, args):
+    async def subscribe_search(self, ctx: commands.context, *, args: str):
         guild = ctx.guild.id
         query = {"query": args,
                  "ch_id": ctx.channel.id}
@@ -201,7 +201,7 @@ class Twitter(commands.Cog):
         return message
     
     @subscribe_search.error
-    async def subscribe_search_error(self, ctx, error):
+    async def subscribe_search_error(self, ctx: commands.context, error: commands.CommandError):
         if isinstance(error, commands.MissingRequiredArgument):
             err_msg = "recieve no arguments."
             message = ":x:`subscribe_search` require 1 argument"
@@ -224,7 +224,7 @@ class Twitter(commands.Cog):
                       help = "Show all subscription with their id.",
                       brief = "Show all subscription")
     @log.commandlog
-    async def subscribed(self, ctx):
+    async def subscribed(self, ctx: commands.context):
         guild = ctx.guild.id
         message = "```\n"
         message = message + "user:\n"
@@ -251,12 +251,12 @@ class Twitter(commands.Cog):
     @commands.command(aliases = ["u", "U"],
                       help = "Force checking the latest tweets of all subscriptions",
                       brief = "Force checking update")
-    async def update(self, ctx):
+    async def update(self, ctx: commands.context):
         log.print_cmd("update", (), ctx)
         async with httpx.AsyncClient() as client:
             await self.call_update(ctx.guild.id, client)
     
-    async def call_update(self, guild, client):
+    async def call_update(self, guild: int, client: httpx.AsyncClient):
         all_tasks = []
         for sub_type in self.twitter_obj[guild]:
             no_ch = []
@@ -298,7 +298,7 @@ class Twitter(commands.Cog):
                       brief = "Delete the Twitter user",
                       usage = "<id>")
     @log.commandlog
-    async def delete_user(self, ctx, args):
+    async def delete_user(self, ctx: commands.context, args: str):
         guild = ctx.guild.id
         try:
             del_num = int(args)
@@ -320,7 +320,7 @@ class Twitter(commands.Cog):
         return message
     
     @delete_user.error
-    async def delete_user_error(self, ctx, error):
+    async def delete_user_error(self, ctx: commands.context, error: commands.CommandError):
         if isinstance(error, commands.MissingRequiredArgument):
             err_msg = "recieve no arguments."
             message = ":x:`delete_user` require 1 argument"
@@ -342,7 +342,7 @@ class Twitter(commands.Cog):
                       brief = "Delete the Twitter search",
                       usage = "<id>")
     @log.commandlog
-    async def delete_search(self, ctx, args):
+    async def delete_search(self, ctx: commands.CommandError, args: str):
         guild = ctx.guild.id
         try:
             del_num = int(args)
@@ -364,7 +364,7 @@ class Twitter(commands.Cog):
         return message
     
     @delete_search.error
-    async def delete_search_error(self, ctx, error):
+    async def delete_search_error(self, ctx: commands.context, error: commands.CommandError):
         if isinstance(error, commands.MissingRequiredArgument):
             err_msg = "recieve no arguments."
             message = ":x:`delete_search` require 1 argument"
@@ -378,5 +378,5 @@ class Twitter(commands.Cog):
             logger.error("twitter timer not found")
 
 
-async def setup(bot):
+async def setup(bot: commands.bot):
     await bot.add_cog(Twitter(bot))

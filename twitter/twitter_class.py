@@ -1,3 +1,4 @@
+import discord
 import httpx
 import utils.log as log
 from utils.utils import parse_twitter_msg
@@ -8,16 +9,16 @@ url_factory = {"timeline": "https://api.twitter.com/2/users/%s/tweets",
                "recent": "https://api.twitter.com/2/tweets/search/recent"}
 
 class TwitterClass():
-    def __init__(self, api, headers, channel):
+    def __init__(self, api: str, headers: dict, channel: discord.channel):
         self.url = url_factory[api]
         self.__headers = headers
         self.channel = channel
         self.ini = True
     
-    def response_proc(self, response):
+    def response_proc(self, response: dict):
         raise NotImplementedError
     
-    async def request(self, client):
+    async def request(self, client: httpx.AsyncClient):
         logger.debug(f"request: {self.console_msg}")
         try:
             response = await client.get(self.url,
@@ -56,7 +57,7 @@ class TwitterClass():
 
 
 class TwitterTimeline(TwitterClass):
-    def __init__(self, sub_json, headers, channel):
+    def __init__(self, sub_json: dict, headers: dict, channel: discord.channel):
         super().__init__("timeline", headers, channel)
         self.sub_json = sub_json
         self.url = self.url % self.sub_json["id"]
@@ -81,7 +82,7 @@ class TwitterTimeline(TwitterClass):
 
 
 class TwitterRecent(TwitterClass):
-    def __init__(self, sub_json, headers, channel):
+    def __init__(self, sub_json: dict, headers: dict, channel: discord.channel):
         super().__init__("recent", headers, channel)
         self.sub_json = sub_json
         self.query = self.sub_json["query"]

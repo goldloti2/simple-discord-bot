@@ -1,9 +1,11 @@
 import discord
+from discord.ext import commands
 import functools
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
 import time
+from typing import Callable, Union
 
 
 def init_logger():
@@ -43,10 +45,10 @@ def init_logger():
     ch.setFormatter(fmt)
     logger.addHandler(ch)
 
-def get_logger(name = "logger"):
+def get_logger(name: str = "logger"):
     return logging.getLogger(name)
 
-def logger_head(ctx, cmd, mode = "info"):
+def logger_head(ctx: commands.context, cmd: str, mode = "info"):
     if mode == "info":
         return f"@{ctx.guild.name}:({cmd})"
     elif mode == "err":
@@ -55,19 +57,19 @@ def logger_head(ctx, cmd, mode = "info"):
 logger = get_logger()
 
 
-def print_cmd(cmd, args, ctx):
+def print_cmd(cmd: str, args: tuple, ctx: commands.context):
     logger.info(f"{logger_head(ctx, cmd)} {args}, from {ctx.channel}")
 
-async def send_msg(cmd, message, ctx):
+async def send_msg(cmd: str, message: Union[dict, str], ctx: commands.context):
     head = logger_head(ctx, cmd)
     await ctx_send(head, message, ctx)
 
-async def send_err(cmd, message, err_msg, ctx):
+async def send_err(cmd: str, message: Union[dict, str], err_msg: str, ctx: commands.context):
     head = logger_head(ctx, cmd, "err")
     logger.warning(f"{head} {err_msg}")
     await ctx_send(head, message, ctx)
 
-async def ctx_send(head, message, ctx):
+async def ctx_send(head: str, message: Union[dict, str], ctx: commands.context):
     if message == "":
         return
     if isinstance(message, str):
@@ -85,7 +87,7 @@ async def ctx_send(head, message, ctx):
     logger.debug(f"\n{message}")
 
 
-def commandlog(func):
+def commandlog(func: Callable):
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
         if len(kwargs) == 0:
@@ -99,7 +101,7 @@ def commandlog(func):
             await send_msg(func.__name__, message, args[1])
     return wrapper
 
-def initlog(func):
+def initlog(func: Callable):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         classname = func.__qualname__.split(".")[-2]

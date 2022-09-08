@@ -195,3 +195,7 @@
 2022/09/06 v.2.1
 
 - replace **requests** with **httpx**, which supports async
+
+2022/09/08
+
+- annotate all parameter types
