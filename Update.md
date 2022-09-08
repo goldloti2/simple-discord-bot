@@ -195,3 +195,12 @@
 2022/09/06 v.2.1
 
 - replace **requests** with **httpx**, which supports async
+
+2022/09/08 dev-branch
+
+- start working on slash commands convertion
+- utils/log.py
+  - change parameter *ctx*: commands.Context to *interact*: discord.Interaction
+- cmds/test.py
+  - implementing slash command *pong*, not working now
+- TODO: ctx rename to interact (1/6) (main, cog_core, ~~log~~, cogs\*3)

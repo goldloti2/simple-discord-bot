@@ -46,34 +46,37 @@ def init_logger():
 def get_logger(name = "logger"):
     return logging.getLogger(name)
 
-def logger_head(ctx, cmd, mode = "info"):
+def logger_head(interact, cmd, mode = "info"):
     if mode == "info":
-        return f"@{ctx.guild.name}:({cmd})"
+        return f"@{interact.guild.name}:({cmd})"
     elif mode == "err":
-        return f"@{ctx.guild.name}:({cmd} error)"
+        return f"@{interact.guild.name}:({cmd} error)"
 
 logger = get_logger()
 
 
-def print_cmd(cmd, args, ctx):
-    logger.info(f"{logger_head(ctx, cmd)} {args}, from {ctx.channel}")
+def print_cmd(cmd, args, interact):
+    logger.info(f"{logger_head(interact, cmd)} {args}, from {interact.channel}")
 
-async def send_msg(cmd, message, ctx):
-    head = logger_head(ctx, cmd)
-    await ctx_send(head, message, ctx)
+async def send_msg(cmd, message, interact, mode = "send"):
+    head = logger_head(interact, cmd)
+    await ctx_send(head, message, interact, mode)
 
-async def send_err(cmd, message, err_msg, ctx):
-    head = logger_head(ctx, cmd, "err")
+async def send_err(cmd, message, err_msg, interact):
+    head = logger_head(interact, cmd, "err")
     logger.warning(f"{head} {err_msg}")
-    await ctx_send(head, message, ctx)
+    await ctx_send(head, message, interact, "response")
 
-async def ctx_send(head, message, ctx):
+async def ctx_send(head, message, interact, mode = "send"):
     if message == "":
         return
     if isinstance(message, str):
         message = {"content":message}
     try:
-        await ctx.send(**message)
+        if mode == "send":
+            await interact.channel.send(**message)
+        elif mode == "response":
+            await interact.response.send_message(**message)
     except discord.HTTPException as e:
         logger.warning(f"{head} response failed")
         logger.debug(str(e))
@@ -96,7 +99,7 @@ def commandlog(func):
         if isinstance(message, tuple):
             await send_err(func.__name__, message[0], message[1], args[1])
         else:
-            await send_msg(func.__name__, message, args[1])
+            await send_msg(func.__name__, message, args[1], "response")
     return wrapper
 
 def initlog(func):
