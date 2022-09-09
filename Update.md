@@ -204,3 +204,7 @@
 - cmds/test.py
   - implementing slash command *pong*, not working now
 - TODO: ctx rename to interact (1/6) (main, cog_core, ~~log~~, cogs\*3)
+
+2022/09/09 dev-branch, merge from main-branch
+
+- annotate all parameter types

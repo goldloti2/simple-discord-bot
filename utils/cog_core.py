@@ -5,10 +5,10 @@ import utils.log as log
 
 logger = log.get_logger()
 
-def ext_str(exts):
+def ext_str(exts: str):
     return f"cmds.{exts}"
 
-def create_msg(msg, head, set_exts):
+def create_msg(msg: str, head: str, set_exts: set):
 	if len(set_exts) != 0:
 		msg = msg + head + ": __" + "__, __".join(set_exts) + "__\n"
 	return msg
@@ -17,7 +17,7 @@ def create_msg(msg, head, set_exts):
 
 class Cog_Core(commands.Cog):
     @log.initlog
-    def __init__(self, bot):
+    def __init__(self, bot: commands.bot):
         self.bot = bot
         self.check_cmds()
     
@@ -54,7 +54,7 @@ class Cog_Core(commands.Cog):
     '''
     @commands.command(hidden = True)
     @log.commandlog
-    async def load(self, ctx, *args):
+    async def load(self, ctx: commands.context, *args):
         args_exts = set(args)
         all_flag = False
         if len(args) == 0 or "all" in args:
@@ -98,7 +98,7 @@ class Cog_Core(commands.Cog):
     '''
     @commands.command(hidden = True)
     @log.commandlog
-    async def unload(self, ctx, *args):
+    async def unload(self, ctx: commands.context, *args):
         args_exts = set(args)
         all_flag = False
         if len(args) == 0 or "all" in args:
@@ -139,7 +139,7 @@ class Cog_Core(commands.Cog):
     '''
     @commands.command(hidden = True)
     @log.commandlog
-    async def reload(self, ctx, *args):
+    async def reload(self, ctx: commands.context, *args):
         args_exts = set(args)
         all_flag = False
         if len(args) == 0 or "all" in args:
@@ -180,13 +180,13 @@ class Cog_Core(commands.Cog):
     '''
     @commands.command(hidden = True)
     @log.commandlog
-    async def update_cogs(self, ctx):
+    async def update_cogs(self, ctx: commands.context):
         self.check_cmds()
         message = f"Find {len(self.list_exts)} extension: __{'__, __'.join(self.list_exts)}__"
         return message
 
 
-async def setup(bot):
+async def setup(bot: commands.bot):
     cog_core = Cog_Core(bot)
     await cog_core.init_load()
     await bot.add_cog(cog_core)

@@ -1,9 +1,11 @@
 import discord
+from discord.ext import commands
 import functools
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
 import time
+from typing import Callable, Union
 
 
 def init_logger():
@@ -43,10 +45,10 @@ def init_logger():
     ch.setFormatter(fmt)
     logger.addHandler(ch)
 
-def get_logger(name = "logger"):
+def get_logger(name: str = "logger"):
     return logging.getLogger(name)
 
-def logger_head(interact, cmd, mode = "info"):
+def logger_head(interact, cmd: str, mode = "info"):
     if mode == "info":
         return f"@{interact.guild.name}:({cmd})"
     elif mode == "err":
@@ -55,19 +57,19 @@ def logger_head(interact, cmd, mode = "info"):
 logger = get_logger()
 
 
-def print_cmd(cmd, args, interact):
+def print_cmd(cmd: str, args: tuple, interact):
     logger.info(f"{logger_head(interact, cmd)} {args}, from {interact.channel}")
 
-async def send_msg(cmd, message, interact, mode = "send"):
+async def send_msg(cmd: str, message: Union[dict, str], interact, mode = "send"):
     head = logger_head(interact, cmd)
     await ctx_send(head, message, interact, mode)
 
-async def send_err(cmd, message, err_msg, interact):
+async def send_err(cmd: str, message: Union[dict, str], err_msg: str, interact):
     head = logger_head(interact, cmd, "err")
     logger.warning(f"{head} {err_msg}")
     await ctx_send(head, message, interact, "response")
 
-async def ctx_send(head, message, interact, mode = "send"):
+async def ctx_send(head: str, message: Union[dict, str], interact, mode = "send"):
     if message == "":
         return
     if isinstance(message, str):
@@ -88,7 +90,7 @@ async def ctx_send(head, message, interact, mode = "send"):
     logger.debug(f"\n{message}")
 
 
-def commandlog(func):
+def commandlog(func: Callable):
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
         if len(kwargs) == 0:
@@ -102,7 +104,7 @@ def commandlog(func):
             await send_msg(func.__name__, message, args[1], "response")
     return wrapper
 
-def initlog(func):
+def initlog(func: Callable):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         classname = func.__qualname__.split(".")[-2]

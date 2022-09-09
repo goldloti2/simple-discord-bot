@@ -7,7 +7,7 @@ logger = log.get_logger()
 
 class Misc(commands.Cog):
     @log.initlog
-    def __init__(self, bot):
+    def __init__(self, bot: commands.bot):
         self.bot = bot
     
     '''
@@ -24,7 +24,7 @@ class Misc(commands.Cog):
                              ", and the arguments you sent",
                       brief = "Ping the bot")
     @log.commandlog
-    async def ping(self, ctx, *args):
+    async def ping(self, ctx: commands.context, *args):
         message = f"{self.bot.latency * 1000:.3f} ms, "
         message = message + f"{ctx.channel}@<#{ctx.channel.id}>(\\#{ctx.channel.id})\n"
         message = message + f"{len(args)} arguments: {', '.join(args)}"
@@ -43,7 +43,7 @@ class Misc(commands.Cog):
                       brief = "Change the game stat",
                       usage = "<game stat>")
     @log.commandlog
-    async def change_game(self, ctx, *, args):
+    async def change_game(self, ctx: commands.context, *, args):
         self.bot.setting["GAME"] = args
         game = discord.Game(self.bot.setting["GAME"])
         await self.bot.change_presence(activity = game)
@@ -52,12 +52,12 @@ class Misc(commands.Cog):
         return message
     
     @change_game.error
-    async def change_game_error(self, ctx, error):
+    async def change_game_error(self, ctx: commands.context, error: commands.CommandError):
         if isinstance(error, commands.MissingRequiredArgument):
             err_msg = "recieve no arguments."
             message = ":x:`change_game` require 1 argument"
             await log.send_err("change_game", message, err_msg, ctx)
 
 
-async def setup(bot):
+async def setup(bot: commands.bot):
     await bot.add_cog(Misc(bot))

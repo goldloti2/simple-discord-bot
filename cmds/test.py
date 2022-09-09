@@ -19,7 +19,7 @@ to the loop
 
 class Test(commands.GroupCog):
     @log.initlog
-    def __init__(self, bot):
+    def __init__(self, bot: commands.bot):
         self.bot = bot
     
     @app_commands.command(name = "pong")
@@ -32,7 +32,7 @@ class Test(commands.GroupCog):
     
     @commands.command(hidden = True)
     @log.commandlog
-    async def pong2(self, ctx):
+    async def pong2(self, ctx: commands.context):
         start_time = time.time()
         async with httpx.AsyncClient() as client:
             tasks = []
@@ -42,7 +42,7 @@ class Test(commands.GroupCog):
         message = f"end time: {time.time() - start_time:.5f} sec."
         return message
     
-    async def request_url(self, num, start_time, client, ctx):
+    async def request_url2(self, num: int, start_time: float, client: httpx.AsyncClient, ctx: commands.context):
         url = "https://www.youtube.com/watch"#'https://www.google.com.tw/search'
         t1 = time.time()
         res = await client.get(url = url, params = {"v": "Gdx4UwxeOik"})#{"q": "python"})
@@ -53,5 +53,5 @@ class Test(commands.GroupCog):
         await log.send_msg("request_url()", message, ctx)
 
 
-async def setup(bot):
+async def setup(bot: commands.bot):
     await bot.add_cog(Test(bot))

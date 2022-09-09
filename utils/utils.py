@@ -4,18 +4,18 @@ import os
 
 SETTING_FILE = os.path.join("settings", "setting.json")
 
-def load_json(file = SETTING_FILE):
+def load_json(file: str = SETTING_FILE):
     with open(file, "r", encoding = "utf-8") as jfile:
         data = json.load(jfile)
     return data
 
-def save_json(data, file = SETTING_FILE):
+def save_json(data: dict, file: str = SETTING_FILE):
     if not os.path.isdir(os.path.dirname(file)):
         os.makedirs(os.path.dirname(file))
     with open(file, "w", encoding = "utf-8") as jfile:
         json.dump(data, jfile, indent = 4)
 
-def parse_twitter_msg(isotime, username, id):
+def parse_twitter_msg(isotime: str, username: str, id: str):
     timestr = datetime.datetime.strptime(isotime, "%Y-%m-%dT%H:%M:%S.000Z")
     timestr += datetime.timedelta(hours = 8)
     outtime = timestr.strftime("%Y/%m/%d, %H:%M")

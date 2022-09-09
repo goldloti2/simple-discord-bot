@@ -21,15 +21,15 @@ async def on_ready():
     logger.info(f"logged in as {bot.user}, in {[g.name for g in bot.guilds]}")
 
 @bot.event
-async def on_guild_join(guild):
+async def on_guild_join(guild: discord.guild):
     os.makedirs(os.path.join("settings", str(guild.id)), exist_ok = True)
 
 @bot.event
-async def on_guild_remove(guild):
+async def on_guild_remove(guild: discord.guild):
     rmtree(os.path.join("settings", str(guild.id)), exist_ok = True)
 
 @bot.event
-async def on_command_error(ctx, error):
+async def on_command_error(ctx: commands.context, error: commands.CommandError):
     if isinstance(error, commands.CommandNotFound):
         logger.warning("recieve unknown command")
         logger.debug(error)
