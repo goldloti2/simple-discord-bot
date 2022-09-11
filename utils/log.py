@@ -48,7 +48,7 @@ def init_logger():
 def get_logger(name: str = "logger"):
     return logging.getLogger(name)
 
-def logger_head(interact, cmd: str, mode = "info"):
+def logger_head(interact: discord.Integration, cmd: str, mode = "info"):
     if mode == "info":
         return f"@{interact.guild.name}:({cmd})"
     elif mode == "err":
@@ -57,19 +57,19 @@ def logger_head(interact, cmd: str, mode = "info"):
 logger = get_logger()
 
 
-def print_cmd(cmd: str, args: tuple, interact):
+def print_cmd(cmd: str, args: tuple, interact: discord.Integration):
     logger.info(f"{logger_head(interact, cmd)} {args}, from {interact.channel}")
 
-async def send_msg(cmd: str, message: Union[dict, str], interact, mode = "send"):
+async def send_msg(cmd: str, message: Union[dict, str], interact: discord.Integration, mode = "send"):
     head = logger_head(interact, cmd)
     await ctx_send(head, message, interact, mode)
 
-async def send_err(cmd: str, message: Union[dict, str], err_msg: str, interact):
+async def send_err(cmd: str, message: Union[dict, str], err_msg: str, interact: discord.Integration):
     head = logger_head(interact, cmd, "err")
     logger.warning(f"{head} {err_msg}")
     await ctx_send(head, message, interact, "response")
 
-async def ctx_send(head: str, message: Union[dict, str], interact, mode = "send"):
+async def ctx_send(head: str, message: Union[dict, str], interact: discord.Integration, mode = "send"):
     if message == "":
         return
     if isinstance(message, str):

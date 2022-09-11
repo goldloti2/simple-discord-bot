@@ -16,6 +16,8 @@ bot.setting = setting
 
 @bot.event
 async def on_ready():
+    bot.tree.copy_global_to(guild = bot.guilds[0])
+    await bot.tree.sync(guild = bot.guilds[0])
     game = discord.Game(bot.setting["GAME"])
     await bot.change_presence(status = discord.Status.idle, activity = game)
     logger.info(f"logged in as {bot.user}, in {[g.name for g in bot.guilds]}")

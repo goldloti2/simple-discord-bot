@@ -24,9 +24,9 @@ class Test(commands.GroupCog):
     
     @app_commands.command(name = "pong")
     @log.commandlog
-    async def pong(self, ctx):
+    async def pong(self, interact: discord.Integration):
         start_time = time.time()
-        await asyncio.sleep(3)
+        await asyncio.sleep(2)
         message = f"end time: {time.time() - start_time:.5f} sec."
         return message
     

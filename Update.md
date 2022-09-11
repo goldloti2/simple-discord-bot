@@ -208,3 +208,9 @@
 2022/09/09 dev-branch, merge from main-branch
 
 - annotate all parameter types
+
+2022/09/11 dev branch
+
+- cmds/test.py
+  - slash command *pong* fixed, can't wait too long (2 sec max) to response?
+- annotate interaction parameter type
