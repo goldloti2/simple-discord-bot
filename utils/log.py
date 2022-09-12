@@ -78,9 +78,15 @@ async def ctx_send(head: str, message: Union[dict, str], interact: discord.Integ
         if mode == "send":
             await interact.channel.send(**message)
         elif mode == "response":
-            await interact.response.send_message(**message)
+            if not interact.response.is_done():
+                await interact.response.send_message(**message)
+            else:
+                await interact.followup.send(**message)
     except discord.HTTPException as e:
         logger.warning(f"{head} response failed")
+        logger.debug(str(e))
+    except discord.InteractionResponded as e:
+        logger.warning(f"{head} already responded")
         logger.debug(str(e))
     except:
         logger.error(f"{head} response error")

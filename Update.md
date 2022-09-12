@@ -164,15 +164,15 @@
 
 2022/09/03 v.2.0
 
-- upgrade Discord.py to 2.0.1
+- Upgrade Discord.py to 2.0.1
   - bot.load_extension() and bot.add_cog() changed to *coroutine*
 - Work on list
   - Change all commands to slash commands
-  - ~~Twitter timer rework~~ *done at 2022/09/05-2*
+  - ~~Twitter timer rework~~ - *done at 2022/09/05-2*
 
 2022/09/04
 
-- revise coding style
+- Revise coding style
   - reorder import by alphabet
   - rename initlogger(), getlogger() to init_logger(), get_logger()
   - rename Twitter_Class, Twitter_Timeline, Twitter_Recent to TwitterClass, TwitterTimeline, TwitterRecent
@@ -180,37 +180,48 @@
 
 2022/09/05 - 1
 
-- change bot start method: from bot.run() to bot.start()
+- Change bot start method - from bot.run() to bot.start()
 
 2022/09/05 - 2
 
 - cmds/twitter.py
-  - timer rework: use discord.ext.tasks
-  - reduce the use of self.bot.loop
-  - fix subscribe.json not loaded bug: caused by loading cog before bot login
+  - Timer rework: use discord.ext.tasks
+  - Reduce the use of self.bot.loop
+  - fix bug - subscribe.json not loaded
+    - Caused by loading cog before bot login
 
 - utils/cog_core.py
-  - fix "load_extension, unload_extension, reload_extension were never awaited"
+  - fix bug - "load_extension, unload_extension, reload_extension were never awaited"
 
 2022/09/06 v.2.1
 
-- replace **requests** with **httpx**, which supports async
+- Replace **requests** with **httpx**, which supports async
 
 2022/09/08 dev-branch
 
-- start working on slash commands convertion
+- Start working on slash commands convertion
 - utils/log.py
   - change parameter *ctx*: commands.Context to *interact*: discord.Interaction
 - cmds/test.py
-  - implementing slash command *pong*, not working now
-- TODO: ctx rename to interact (1/6) (main, cog_core, ~~log~~, cogs\*3)
+  - rework slash command - pong
+    - bug: not working now
+- TODO: ctx rename to interact (2/6) (main, cog_core, ~~log~~, cogs\*2)
 
 2022/09/09 dev-branch, merge from main-branch
 
-- annotate all parameter types
+- Annotate all parameter types
 
 2022/09/11 dev branch
 
 - cmds/test.py
-  - slash command *pong* fixed, can't wait too long (2 sec max) to response?
-- annotate interaction parameter type
+  - fix slash command - pong
+    - bug: can't wait too long (2 sec max) to response? - *fix in 2022/09/12*
+  - annotate interaction parameter type
+
+2022/09/12 dev branch
+
+- cmds/test.py
+  - fix slash command - pong
+    - interaction.response.send_message() wait up to 3 sec
+    - use await interaction.response.defer() and interaction.followup.send()
+  - rework slash command - pong2
