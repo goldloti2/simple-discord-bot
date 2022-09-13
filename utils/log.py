@@ -5,7 +5,7 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
 import time
-from typing import Callable, Union
+from typing import Callable, Union, Optional
 
 
 def init_logger():
@@ -57,7 +57,7 @@ def logger_head(interact: discord.Integration, cmd: str, mode = "info"):
 logger = get_logger()
 
 
-def print_cmd(cmd: str, args: tuple, interact: discord.Integration):
+def print_cmd(cmd: str, interact: discord.Integration, args: Optional[dict]):
     logger.info(f"{logger_head(interact, cmd)} {args}, from {interact.channel}")
 
 async def send_msg(cmd: str, message: Union[dict, str], interact: discord.Integration, mode = "send"):
@@ -99,10 +99,7 @@ async def ctx_send(head: str, message: Union[dict, str], interact: discord.Integ
 def commandlog(func: Callable):
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
-        if len(kwargs) == 0:
-            print_cmd(func.__name__, args[2:], args[1])
-        else:
-            print_cmd(func.__name__, (kwargs["args"],), args[1])
+        print_cmd(func.__name__, args[1], kwargs)
         message = await func(*args, **kwargs)
         if isinstance(message, tuple):
             await send_err(func.__name__, message[0], message[1], args[1])

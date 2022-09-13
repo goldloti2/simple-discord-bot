@@ -22,7 +22,7 @@ class Test(commands.GroupCog):
     def __init__(self, bot: commands.bot):
         self.bot = bot
     
-    @app_commands.command(name = "pong")
+    @app_commands.command(description = "test command")
     @log.commandlog
     async def pong(self, interact: discord.Integration):
         start_time = time.time()
@@ -31,7 +31,7 @@ class Test(commands.GroupCog):
         message = f"end time: {time.time() - start_time:.5f} sec."
         return message
     
-    @app_commands.command(name = "pong2")
+    @app_commands.command(description = "test command")
     @log.commandlog
     async def pong2(self, interact: discord.Integration):
         start_time = time.time()

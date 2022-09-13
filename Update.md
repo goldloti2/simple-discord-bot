@@ -205,7 +205,7 @@
 - cmds/test.py
   - rework slash command - pong
     - bug: not working now
-- TODO: ctx rename to interact (2/6) (main, cog_core, ~~log~~, cogs\*2)
+- TODO: ctx rename to interact (3/6) (main, cog_core, ~~log~~, cogs\*1)
 
 2022/09/09 dev-branch, merge from main-branch
 
@@ -225,3 +225,19 @@
     - interaction.response.send_message() wait up to 3 sec
     - use await interaction.response.defer() and interaction.followup.send()
   - rework slash command - pong2
+
+2022/09/13 dev branch
+
+- cmds/misc.py
+  - rework slash command - ping
+    - no argument now, since slash commands don't allow ambiguous arguments
+  - rework slash command - change_game
+    - no command error, since slash commands don't support
+- cmd/test.py
+  - modify slash command - pong, pong2
+    - add description
+- utils/log.py
+  - modify function - print_cmd
+    - rearrange argument so args can be optional
+  - modify decorator - commandlog
+    - correctly send argument to print_cmd
