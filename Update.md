@@ -226,7 +226,7 @@
     - use await interaction.response.defer() and interaction.followup.send()
   - rework slash command - pong2
 
-2022/09/13 dev branch
+2022/09/13 dev branch - 1
 
 - cmds/misc.py
   - rework slash command - ping
@@ -241,3 +241,9 @@
     - rearrange argument so args can be optional
   - modify decorator - commandlog
     - correctly send argument to print_cmd
+
+2022/09/13 dev branch - 2
+
+- utils/cog_core.py
+  - rename Cog_Core to CogCore
+  - rework slash commands - load, unload, reload, update (previous update_cogs)

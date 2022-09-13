@@ -1,6 +1,9 @@
+import discord
+from discord import app_commands
 from discord.ext import commands
 import os
 import sys
+from typing import Optional
 import utils.log as log
 
 logger = log.get_logger()
@@ -15,7 +18,7 @@ def create_msg(msg: str, head: str, set_exts: set):
 
 
 
-class Cog_Core(commands.Cog):
+class CogCore(commands.GroupCog):
     @log.initlog
     def __init__(self, bot: commands.bot):
         self.bot = bot
@@ -41,9 +44,9 @@ class Cog_Core(commands.Cog):
         logger.info(f"Extension found:{', '.join(list_exts)}")
     
     '''
-    command load(*args):
+    command load(loads):
         argument:
-            args (optional): extension want to load
+            loads (optional): extension want to load
         send message (on success):
             ":white_check_mark:Extension loaded: {loaded extension}"
             (opt)":x:Extension already loaded: {already loaded extension}"
@@ -52,14 +55,14 @@ class Cog_Core(commands.Cog):
             load the specific extension(s).
             args leave blank or "all" means load all the found extensions.
     '''
-    @commands.command(hidden = True)
+    @app_commands.command(description = "load extension")
+    @app_commands.describe(loads = "extension being load, or leave it blank to load all")
     @log.commandlog
-    async def load(self, ctx: commands.context, *args):
-        args_exts = set(args)
-        all_flag = False
-        if len(args) == 0 or "all" in args:
-            all_flag = True
-        if all_flag:
+    async def load(self, interact: discord.Integration, loads: Optional[str] = None):
+        await interact.response.defer()
+        if loads != None:
+            args_exts = set(loads)
+        else:
             args_exts = self.list_exts
         
         exts_stat = [set(), set(), set()]
@@ -78,7 +81,7 @@ class Cog_Core(commands.Cog):
             else:
                 exts_stat[0].add(exts)
         
-        if all_flag and len(exts_stat[0]) != 0:
+        if loads == None and len(exts_stat[0]) != 0:
             exts_stat[1] = exts_stat[2] = []
         message = ""
         for msg, exts in zip(msgs_stat, exts_stat):
@@ -86,9 +89,9 @@ class Cog_Core(commands.Cog):
         return message
     
     '''
-    command unload(*args):
+    command unload(unloads):
         argument:
-            args (optional): extension want to unload
+            unloads (optional): extension want to unload
         send message (on success):
             ":white_check_mark:Extension unloaded: {unloaded extension}"
             (opt)":x:Extension not loaded: {not loaded extension}"
@@ -96,14 +99,14 @@ class Cog_Core(commands.Cog):
             unload the specific extension(s).
             args leave blank or "all" means unload all the found extensions.
     '''
-    @commands.command(hidden = True)
+    @app_commands.command(description = "unload extension")
+    @app_commands.describe(unloads = "extension being unload, or leave it blank to unload all")
     @log.commandlog
-    async def unload(self, ctx: commands.context, *args):
-        args_exts = set(args)
-        all_flag = False
-        if len(args) == 0 or "all" in args:
-            all_flag = True
-        if all_flag:
+    async def unload(self, interact: discord.Integration, unloads: Optional[str] = None):
+        await interact.response.defer()
+        if unloads != None:
+            args_exts = set(unloads)
+        else:
             args_exts = self.list_exts
         
         exts_stat = [set(), set()]
@@ -118,7 +121,7 @@ class Cog_Core(commands.Cog):
             else:
                 exts_stat[0].add(exts)
         
-        if "all" in args and len(exts_stat[0]) != 0:
+        if unloads == None and len(exts_stat[0]) != 0:
             exts_stat[1] = []
         message = ""
         for msg, exts in zip(msgs_stat, exts_stat):
@@ -126,9 +129,9 @@ class Cog_Core(commands.Cog):
         return message
     
     '''
-    command reload(*args):
+    command reload(reloads):
         argument:
-            args (optional): extension want to reload
+            reloads (optional): extension want to reload
         send message (on success):
             ":white_check_mark:Extension reloaded: {loaded extension}"
             (opt)":x:Extension already loaded: {already loaded extension}"
@@ -137,14 +140,14 @@ class Cog_Core(commands.Cog):
             reload the specific extension(s).
             args leave blank or "all" means reload all the found extensions.
     '''
-    @commands.command(hidden = True)
+    @app_commands.command(description = "reload extension")
+    @app_commands.describe(reloads = "extension being reload, or leave it blank to reload all")
     @log.commandlog
-    async def reload(self, ctx: commands.context, *args):
-        args_exts = set(args)
-        all_flag = False
-        if len(args) == 0 or "all" in args:
-            all_flag = True
-        if all_flag:
+    async def reload(self, interact: discord.Integration, reloads: Optional[str] = None):
+        await interact.response.defer()
+        if reloads != None:
+            args_exts = set(reloads)
+        else:
             args_exts = self.list_exts
         
         exts_stat = [set(), set(), set()]
@@ -163,7 +166,7 @@ class Cog_Core(commands.Cog):
             else:
                 exts_stat[0].add(exts)
         
-        if all_flag and len(exts_stat[0]) != 0:
+        if reloads == None and len(exts_stat[0]) != 0:
             exts_stat[1] = exts_stat[2] = []
         message = ""
         for msg, exts in zip(msgs_stat, exts_stat):
@@ -171,22 +174,22 @@ class Cog_Core(commands.Cog):
         return message
     
     '''
-    command update_cogs():
-        argument:
+    command update():
+        argument: None
         send message (on success):
             "Find {len(self.list_exts)} extension: {self.list_exts}"
         function:
             check if there is any new extension file in cmds folder
     '''
-    @commands.command(hidden = True)
+    @app_commands.command(description = "check if there is any new extension file")
     @log.commandlog
-    async def update_cogs(self, ctx: commands.context):
+    async def update(self, ctx: commands.context):
         self.check_cmds()
         message = f"Find {len(self.list_exts)} extension: __{'__, __'.join(self.list_exts)}__"
         return message
 
 
 async def setup(bot: commands.bot):
-    cog_core = Cog_Core(bot)
+    cog_core = CogCore(bot)
     await cog_core.init_load()
     await bot.add_cog(cog_core)
