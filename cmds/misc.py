@@ -8,7 +8,7 @@ logger = log.get_logger()
 
 class Misc(commands.Cog):
     @log.initlog
-    def __init__(self, bot: commands.bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
     
     '''
@@ -20,9 +20,10 @@ class Misc(commands.Cog):
     '''
     @app_commands.command(description = "Ping the bot and show the latency")
     @log.commandlog
-    async def ping(self, interact: discord.Integration):
+    async def ping(self, interact: discord.Interaction):
         message = f"{self.bot.latency * 1000:.3f} ms, "
-        message = message + f"{interact.channel}@<#{interact.channel.id}>(\\#{interact.channel.id})\n"
+        message = message + f"{interact.channel}@<#{interact.channel.id}>"
+        message = message + f"(\\#{interact.channel.id})\n"
         return message
     
     '''
@@ -37,7 +38,7 @@ class Misc(commands.Cog):
     @app_commands.command(description = "Change the game stat")
     @app_commands.describe(gamestat = "replaced game stat string")
     @log.commandlog
-    async def change_game(self, interact: discord.Integration, gamestat: str):
+    async def change_game(self, interact: discord.Interaction, gamestat: str):
         self.bot.setting["GAME"] = gamestat
         game = discord.Game(self.bot.setting["GAME"])
         await self.bot.change_presence(activity = game)
@@ -46,5 +47,5 @@ class Misc(commands.Cog):
         return message
 
 
-async def setup(bot: commands.bot):
+async def setup(bot: commands.Bot):
     await bot.add_cog(Misc(bot))

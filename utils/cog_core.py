@@ -20,7 +20,7 @@ def create_msg(msg: str, head: str, set_exts: set):
 
 class CogCore(commands.GroupCog):
     @log.initlog
-    def __init__(self, bot: commands.bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.check_cmds()
     
@@ -58,10 +58,11 @@ class CogCore(commands.GroupCog):
     @app_commands.command(description = "load extension")
     @app_commands.describe(loads = "extension being load, or leave it blank to load all")
     @log.commandlog
-    async def load(self, interact: discord.Integration, loads: Optional[str] = None):
+    async def load(self, interact: discord.Interaction,
+                   loads: Optional[str] = None):
         await interact.response.defer()
         if loads != None:
-            args_exts = set(loads.split(' '))
+            args_exts = set(loads.split(" "))
         else:
             args_exts = self.list_exts
         
@@ -102,10 +103,11 @@ class CogCore(commands.GroupCog):
     @app_commands.command(description = "unload extension")
     @app_commands.describe(unloads = "extension being unload, or leave it blank to unload all")
     @log.commandlog
-    async def unload(self, interact: discord.Integration, unloads: Optional[str] = None):
+    async def unload(self, interact: discord.Interaction,
+                     unloads: Optional[str] = None):
         await interact.response.defer()
         if unloads != None:
-            args_exts = set(unloads.split(' '))
+            args_exts = set(unloads.split(" "))
         else:
             args_exts = self.list_exts
         
@@ -143,10 +145,11 @@ class CogCore(commands.GroupCog):
     @app_commands.command(description = "reload extension")
     @app_commands.describe(reloads = "extension being reload, or leave it blank to reload all")
     @log.commandlog
-    async def reload(self, interact: discord.Integration, reloads: Optional[str] = None):
+    async def reload(self, interact: discord.Interaction,
+                     reloads: Optional[str] = None):
         await interact.response.defer()
         if reloads != None:
-            args_exts = set(reloads.split(' '))
+            args_exts = set(reloads.split(" "))
         else:
             args_exts = self.list_exts
         
@@ -189,7 +192,7 @@ class CogCore(commands.GroupCog):
         return message
 
 
-async def setup(bot: commands.bot):
+async def setup(bot: commands.Bot):
     cog_core = CogCore(bot)
     await cog_core.init_load()
     await bot.add_cog(cog_core)

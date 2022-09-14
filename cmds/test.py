@@ -19,12 +19,12 @@ to the loop
 
 class Test(commands.GroupCog):
     @log.initlog
-    def __init__(self, bot: commands.bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
     
     @app_commands.command(description = "test command")
     @log.commandlog
-    async def pong(self, interact: discord.Integration):
+    async def pong(self, interact: discord.Interaction):
         start_time = time.time()
         await interact.response.defer()
         await asyncio.sleep(5)
@@ -33,7 +33,7 @@ class Test(commands.GroupCog):
     
     @app_commands.command(description = "test command")
     @log.commandlog
-    async def pong2(self, interact: discord.Integration):
+    async def pong2(self, interact: discord.Interaction):
         start_time = time.time()
         await interact.response.defer()
         async with httpx.AsyncClient() as client:
@@ -44,7 +44,10 @@ class Test(commands.GroupCog):
         message = f"end time: {time.time() - start_time:.5f} sec."
         return message
     
-    async def request_url(self, num: int, start_time: float, client: httpx.AsyncClient, interact: discord.Integration):
+    async def request_url(self, num: int,
+                          start_time: float,
+                          client: httpx.AsyncClient,
+                          interact: discord.Interaction):
         url = "https://www.youtube.com/watch"#'https://www.google.com.tw/search'
         t1 = time.time()
         res = await client.get(url = url, params = {"v": "Gdx4UwxeOik"})#{"q": "python"})
@@ -55,5 +58,5 @@ class Test(commands.GroupCog):
         await log.send_msg("request_url()", message, interact)
 
 
-async def setup(bot: commands.bot):
+async def setup(bot: commands.Bot):
     await bot.add_cog(Test(bot))

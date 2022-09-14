@@ -7,7 +7,6 @@ import os
 import time
 from typing import Callable, Union, Optional
 
-
 def init_logger():
     filename = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()) + ".log"
     fmt = logging.Formatter('[%(asctime)s]:[%(levelname)s]:%(name)s: %(message)s')
@@ -48,37 +47,45 @@ def init_logger():
 def get_logger(name = "logger"):
     return logging.getLogger(name)
 
-def logger_head(interact: Union[discord.Integration, discord.TextChannel], cmd: str, mode = "info"):
+logger = get_logger()
+
+def logger_head(interact: Union[discord.Interaction, discord.TextChannel],
+                cmd: str,
+                mode = "info"):
     if mode == "info":
         return f"@{interact.guild.name}:({cmd})"
     elif mode == "err":
         return f"@{interact.guild.name}:({cmd} error)"
 
-logger = get_logger()
-
-
-def print_cmd(cmd: str, interact: discord.Integration, args: Optional[dict]):
+def print_cmd(cmd: str, interact: discord.Interaction, args: Optional[dict]):
     logger.info(f"{logger_head(interact, cmd)} {args}, from {interact.channel}")
 
-async def send_msg(cmd: str, message: Union[dict, str],
-                   interact: Union[discord.Integration, discord.TextChannel], mode = "send"):
+async def send_msg(cmd: str,
+                   message: Union[dict, str],
+                   interact: Union[discord.Interaction, discord.TextChannel],
+                   mode = "send"):
     head = logger_head(interact, cmd)
     await ctx_send(head, message, interact, mode)
 
-async def send_err(cmd: str, message: Union[dict, str], err_msg: str, interact: discord.Integration):
+async def send_err(cmd: str,
+                   message: Union[dict, str],
+                   err_msg: str,
+                   interact: discord.Interaction):
     head = logger_head(interact, cmd, "err")
     logger.warning(f"{head} {err_msg}")
     await ctx_send(head, message, interact, "response")
 
-async def ctx_send(head: str, message: Union[dict, str],
-                   interact: Union[discord.Integration, discord.TextChannel], mode = "send"):
+async def ctx_send(head: str,
+                   message: Union[dict, str],
+                   interact: Union[discord.Interaction, discord.TextChannel],
+                   mode = "send"):
     if message == "":
         return
     if isinstance(message, str):
-        message = {"content":message}
+        message = {"content": message}
     try:
         if mode == "send":
-            if isinstance(interact, discord.Integration):
+            if isinstance(interact, discord.Interaction):
                 await interact.channel.send(**message)
             elif isinstance(interact, discord.TextChannel):
                 await interact.send(**message)

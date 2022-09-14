@@ -4,12 +4,12 @@ import os
 
 SETTING_FILE = os.path.join("settings", "setting.json")
 
-def load_json(file: str = SETTING_FILE):
+def load_json(file = SETTING_FILE):
     with open(file, "r", encoding = "utf-8") as jfile:
         data = json.load(jfile)
     return data
 
-def save_json(data: dict, file: str = SETTING_FILE):
+def save_json(data: dict, file = SETTING_FILE):
     if not os.path.isdir(os.path.dirname(file)):
         os.makedirs(os.path.dirname(file))
     with open(file, "w", encoding = "utf-8") as jfile:

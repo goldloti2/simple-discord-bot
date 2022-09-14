@@ -9,7 +9,7 @@ url_factory = {"timeline": "https://api.twitter.com/2/users/%s/tweets",
                "recent": "https://api.twitter.com/2/tweets/search/recent"}
 
 class TwitterClass():
-    def __init__(self, api: str, headers: dict, channel: discord.channel):
+    def __init__(self, api: str, headers: dict, channel: discord.TextChannel):
         self.url = url_factory[api]
         self.__headers = headers
         self.channel = channel
@@ -43,7 +43,8 @@ class TwitterClass():
         logger.debug(f"response get: {res_cnt:2}, from {self.console_msg} ")
         if res_cnt == 0:
             return
-        self.params["since_id"] = self.sub_json["since_id"] = res_json["meta"]["newest_id"]
+        self.params["since_id"] = res_json["meta"]["newest_id"]
+        self.sub_json["since_id"] = res_json["meta"]["newest_id"]
         
         if self.ini == True:
             self.ini = False
@@ -57,7 +58,9 @@ class TwitterClass():
 
 
 class TwitterTimeline(TwitterClass):
-    def __init__(self, sub_json: dict, headers: dict, channel: discord.channel):
+    def __init__(self, sub_json: dict,
+                 headers: dict,
+                 channel: discord.TextChannel):
         super().__init__("timeline", headers, channel)
         self.sub_json = sub_json
         self.url = self.url % self.sub_json["id"]
@@ -82,7 +85,9 @@ class TwitterTimeline(TwitterClass):
 
 
 class TwitterRecent(TwitterClass):
-    def __init__(self, sub_json: dict, headers: dict, channel: discord.channel):
+    def __init__(self, sub_json: dict,
+                 headers: dict,
+                 channel: discord.TextChannel):
         super().__init__("recent", headers, channel)
         self.sub_json = sub_json
         self.query = self.sub_json["query"]

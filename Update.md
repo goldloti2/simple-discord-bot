@@ -265,3 +265,9 @@
     - subscribe combine old commands: subscribe_user and subscribe_search
     - subscription rename from subscribed
     - delete combine old commands: delete_user and delete_search
+
+2022/09/14 v.2.2
+
+- slash command rework
+- prettier style: less character per line, more readable spacing
+- several typo fix

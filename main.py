@@ -10,7 +10,8 @@ log.init_logger()
 logger = log.get_logger()
 setting = load_json()
 
-bot = commands.Bot(command_prefix = setting["PREFIX"], intents = discord.Intents.all())
+bot = commands.Bot(command_prefix = setting["PREFIX"],
+                   intents = discord.Intents.all())
 bot.setting = setting
 
 
@@ -23,15 +24,15 @@ async def on_ready():
     logger.info(f"logged in as {bot.user}, in {[g.name for g in bot.guilds]}")
 
 @bot.event
-async def on_guild_join(guild: discord.guild):
+async def on_guild_join(guild: discord.Guild):
     os.makedirs(os.path.join("settings", str(guild.id)), exist_ok = True)
 
 @bot.event
-async def on_guild_remove(guild: discord.guild):
+async def on_guild_remove(guild: discord.Guild):
     rmtree(os.path.join("settings", str(guild.id)), exist_ok = True)
 
 @bot.event
-async def on_command_error(ctx: commands.context, error: commands.CommandError):
+async def on_command_error(ctx: commands.Context, error: commands.CommandError):
     if isinstance(error, commands.CommandNotFound):
         logger.warning("recieve unknown command")
         logger.debug(error)

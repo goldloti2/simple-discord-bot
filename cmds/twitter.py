@@ -23,7 +23,7 @@ def json_path(guild: int, mode = "path"):
 
 class Twitter(commands.GroupCog):
     @log.initlog
-    def __init__(self, bot: commands.bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.__headers = {"Authorization": f"Bearer {self.bot.setting['TWITTER_TOKEN']}"}
         self.sub_cnt = 0
@@ -53,20 +53,11 @@ class Twitter(commands.GroupCog):
         {
             <guild id>: {
                 "user": [
-                    {
-                    "username":<>,
-                    "id":<>,
-                    "ch_id":<>,
-                    "since_id":<>
-                    },
+                    { "username":<>, "id":<>, "ch_id":<>, "since_id":<> },
                     ...
                 ],
                 "query": [
-                    {
-                    "query":<>,
-                    "ch_id":<>,
-                    "since_id":<>
-                    },
+                    { "query":<>, "ch_id":<>, "since_id":<> },
                     ...
                 ]
             },
@@ -75,8 +66,8 @@ class Twitter(commands.GroupCog):
         '''
         
         await self.bot.wait_until_ready()
-        readed = {"user":0, "query":0}
-        finded = {"user":0, "query":0}
+        readed = {"user": 0, "query": 0}
+        finded = {"user": 0, "query": 0}
         for guild in self.bot.guilds:
             self.twitter_obj[guild.id] = {}
             try:
@@ -137,7 +128,7 @@ class Twitter(commands.GroupCog):
     @app_commands.describe(type = "subscribe to user or query",
                            search = "user name or query. \'-RT\' is recommended for query")
     @log.commandlog
-    async def subscribe(self, interact: discord.Integration,
+    async def subscribe(self, interact: discord.Interaction,
                         type: Literal["user", "query"],
                         search: str):
         if type == "user":
@@ -146,7 +137,7 @@ class Twitter(commands.GroupCog):
             message = self.subscribe_search(interact, search)
         return message
     
-    def subscribe_user(self, interact: discord.Integration, name: str):
+    def subscribe_user(self, interact: discord.Interaction, name: str):
         guild = interact.guild.id
         for exist_user in self.sub_json[guild]["user"]:
             if exist_user["username"] == name:
@@ -180,7 +171,7 @@ class Twitter(commands.GroupCog):
         message = f":white_check_mark:Subscribed: {response['name']}@{name}\n{home_url}"
         return message
     
-    def subscribe_search(self, interact: discord.Integration, query_line: str):
+    def subscribe_search(self, interact: discord.Interaction, query_line: str):
         guild = interact.guild.id
         query = {"query": query_line,
                  "ch_id": interact.channel.id}
@@ -210,7 +201,7 @@ class Twitter(commands.GroupCog):
     '''
     @app_commands.command(description = "Show all subscription with id")
     @log.commandlog
-    async def subscription(self, interact: discord.Integration):
+    async def subscription(self, interact: discord.Interaction):
         guild = interact.guild.id
         message = "```\n"
         message = message + "user:\n"
@@ -236,7 +227,7 @@ class Twitter(commands.GroupCog):
     '''
     @app_commands.command(description = "Update Twitter immediately")
     @log.commandlog
-    async def update(self, interact: discord.Integration):
+    async def update(self, interact: discord.Interaction):
         async with httpx.AsyncClient() as client:
             await self.call_update(interact.guild.id, client)
         return {"content": "done!", "ephemeral": True}
@@ -288,7 +279,7 @@ class Twitter(commands.GroupCog):
     @app_commands.describe(type = "user or query",
                            id = "user or query id")
     @log.commandlog
-    async def delete(self, interact: discord.Integration,
+    async def delete(self, interact: discord.Interaction,
                      type: Literal["user", "query"],
                      id: app_commands.Range[int, 0, None]):
         if type == "user":
@@ -297,7 +288,7 @@ class Twitter(commands.GroupCog):
             message = self.delete_search(interact, id)
         return message
     
-    def delete_user(self, interact: discord.Integration, id: int):
+    def delete_user(self, interact: discord.Interaction, id: int):
         guild = interact.guild.id
         if id >= len(self.twitter_obj[guild]["user"]):
             err_msg = f"index out of bound: {id}"
@@ -311,7 +302,7 @@ class Twitter(commands.GroupCog):
         save_json(self.sub_json[guild], json_path(guild))
         return message
     
-    def delete_search(self, interact: discord.Integration, id: int):
+    def delete_search(self, interact: discord.Interaction, id: int):
         guild = interact.guild.id
         if id >= len(self.twitter_obj[guild]["query"]):
             err_msg = f"index out of bound: {id}"
@@ -333,5 +324,5 @@ class Twitter(commands.GroupCog):
             logger.error("twitter timer not found")
 
 
-async def setup(bot: commands.bot):
+async def setup(bot: commands.Bot):
     await bot.add_cog(Twitter(bot))
