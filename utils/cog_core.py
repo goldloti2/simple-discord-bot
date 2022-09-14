@@ -61,7 +61,7 @@ class CogCore(commands.GroupCog):
     async def load(self, interact: discord.Integration, loads: Optional[str] = None):
         await interact.response.defer()
         if loads != None:
-            args_exts = set(loads)
+            args_exts = set(loads.split(' '))
         else:
             args_exts = self.list_exts
         
@@ -105,7 +105,7 @@ class CogCore(commands.GroupCog):
     async def unload(self, interact: discord.Integration, unloads: Optional[str] = None):
         await interact.response.defer()
         if unloads != None:
-            args_exts = set(unloads)
+            args_exts = set(unloads.split(' '))
         else:
             args_exts = self.list_exts
         
@@ -146,7 +146,7 @@ class CogCore(commands.GroupCog):
     async def reload(self, interact: discord.Integration, reloads: Optional[str] = None):
         await interact.response.defer()
         if reloads != None:
-            args_exts = set(reloads)
+            args_exts = set(reloads.split(' '))
         else:
             args_exts = self.list_exts
         

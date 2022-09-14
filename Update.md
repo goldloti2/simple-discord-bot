@@ -205,7 +205,7 @@
 - cmds/test.py
   - rework slash command - pong
     - bug: not working now
-- TODO: ctx rename to interact (3/6) (main, cog_core, ~~log~~, cogs\*1)
+- TODO: ctx rename to interact (4/6) (main, ~~cog_core~~, ~~log~~, cogs\*1)
 
 2022/09/09 dev-branch, merge from main-branch
 
@@ -247,3 +247,8 @@
 - utils/cog_core.py
   - rename Cog_Core to CogCore
   - rework slash commands - load, unload, reload, update (previous update_cogs)
+
+2022/09/14 dev branch
+
+- utils/cog_core.py
+  - fix bug - commands string been split
