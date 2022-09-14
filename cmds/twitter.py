@@ -1,8 +1,10 @@
 import asyncio
+import discord
+from discord import app_commands
 from discord.ext import commands, tasks
 import httpx
 import os
-# import requests
+from typing import Literal
 from twitter.twitter_class import TwitterTimeline, TwitterRecent
 import utils.log as log
 from utils.utils import load_json, save_json
@@ -19,7 +21,7 @@ def json_path(guild: int, mode = "path"):
         return os.path.join(paths[0], str(guild))
 
 
-class Twitter(commands.Cog):
+class Twitter(commands.GroupCog):
     @log.initlog
     def __init__(self, bot: commands.bot):
         self.bot = bot
@@ -111,105 +113,91 @@ class Twitter(commands.Cog):
         query_num = f"{finded['query']}/{readed['query']}"
         logger.info(f"found {user_num} user, {query_num} query")
         self.sub_cnt = finded['user'] + finded['query']
-    
+
     '''
-    command subscribe_user(args):
+    command subscribe(type, search):
         argument:
-            args (required): username to be subscribed
+            type ("user" or "query"): subscribe to user or query
+            search (required): name or query line
         send message (on success):
-            ":white_check_mark:Subscribed: {current user name}@{args}"
-            "{home_url}"
+            user:
+                ":white_check_mark:Subscribed: {current Twitter name}@{search}"
+                "{home_url}"
+            query:
+                ":white_check_mark:Subscribed: \"{search}\""
         function:
-            try subscribe to the specific Twitter user in the current channel.
-            the Twitter user can only be subscribed in 1 channel.
-            on success, self.twitter_obj["user"] and the json file will be updated.
+            user:
+                try subscribe to the specific Twitter user in the current channel.
+                the Twitter user can only be subscribed in 1 channel.
+            query:
+                try subscribe to the specific Twitter search query in the current channel.
+            self.twitter_obj, self.sub_json and the json file will be updated.
     '''
-    @commands.command(aliases = ["sub_user", "su", "SU"],
-                      help = "Subscribe to the Twitter user if found.\n"
-                             "The latest tweets will show in the channel you call this command.\n"
-                             "Please give the user name (started with \"@\")",
-                      brief = "Subscribe to the Twitter user",
-                      usage = "<username>")
+    @app_commands.command(description = "Subscribe to the Twitter user or query results")
+    @app_commands.describe(type = "subscribe to user or query",
+                           search = "user name or query. \'-RT\' is recommended for query")
     @log.commandlog
-    async def subscribe_user(self, ctx: commands.context, args: str):
-        guild = ctx.guild.id
+    async def subscribe(self, interact: discord.Integration,
+                        type: Literal["user", "query"],
+                        search: str):
+        if type == "user":
+            message = self.subscribe_user(interact, search)
+        else:
+            message = self.subscribe_search(interact, search)
+        return message
+    
+    def subscribe_user(self, interact: discord.Integration, name: str):
+        guild = interact.guild.id
         for exist_user in self.sub_json[guild]["user"]:
-            if exist_user["username"] == args:
-                err_msg = f"user already subscribed in {ctx.guild.name}"
-                message = f":x:The user @{args} already subscribed at <#{exist_user['ch_id']}>"
+            if exist_user["username"] == name:
+                err_msg = f"user @{name} already subscribed, in {interact.guild.name}"
+                message = f":x:The user @{name} already subscribed at <#{exist_user['ch_id']}>"
                 return (message, err_msg)
         
         user_fields = "user.fields=id,name"
-        url = f"https://api.twitter.com/2/users/by?usernames={args}&{user_fields}"
-        home_url = f"https://twitter.com/{args}"
-        response = httpx.get(url, headers = self.__headers)
-        if response.status_code != 200:
+        url = f"https://api.twitter.com/2/users/by?usernames={name}&{user_fields}"
+        try:
+            response = httpx.get(url, headers = self.__headers)
+            response.raise_for_status()
+        except httpx.HTTPStatusError as e:
             err_msg = "can't find user"
-            message = f":x:Can't find the user @{args}"
+            message = f":x:Can't find the user @{name}"
             return (message, err_msg)
+        
         response = response.json()["data"][0]
-        user = {"username": args,
+        user = {"username": name,
                 "id": response["id"],
-                "ch_id": ctx.channel.id}
+                "ch_id": interact.channel.id}
         new_obj = TwitterTimeline(user,
                                   self.__headers,
-                                  ctx.channel)
-        logger.info(f"add user: @{args}, in {ctx.guild.name}#{ctx.channel}")
+                                  interact.channel)
+        logger.info(f"add user: @{name}, in {interact.guild.name}#{interact.channel}")
         self.sub_json[guild]["user"].append(user)
         self.twitter_obj[guild]["user"].append(new_obj)
-        self.sub_cnt += 1
-        message = f":white_check_mark:Subscribed: {response['name']}@{args}\n{home_url}"
         save_json(self.sub_json[guild], json_path(guild))
+        self.sub_cnt += 1
+        home_url = f"https://twitter.com/{name}"
+        message = f":white_check_mark:Subscribed: {response['name']}@{name}\n{home_url}"
         return message
     
-    @subscribe_user.error
-    async def subscribe_user_error(self, ctx: commands.context, error: commands.CommandError):
-        if isinstance(error, commands.MissingRequiredArgument):
-            err_msg = "recieve no arguments."
-            message = ":x:`subscribe_user` require 1 argument"
-            await log.send_err("subscribe_user", message, err_msg, ctx)
-    
-    '''
-    command subscribe_search(args):
-        argument:
-            args (required): query to be subscribed
-        send message (on success):
-            ":white_check_mark:Subscribed: \"{args}\""
-        function:
-            try subscribe to the specific Twitter search query in the current channel.
-            self.twitter_obj["query"], self.sub_json["query"] and the json file will be updated.
-    '''
-    @commands.command(aliases = ["sub_search", "ss", "SS"],
-                      help = "Subscribe to the tweets can be found with the given query line.\n"
-                             "The latest tweets will show in the channel you call this command.",
-                      brief = "Subscribe to the Twitter search",
-                      usage = "<query>")
-    @log.commandlog
-    async def subscribe_search(self, ctx: commands.context, *, args: str):
-        guild = ctx.guild.id
-        query = {"query": args,
-                 "ch_id": ctx.channel.id}
+    def subscribe_search(self, interact: discord.Integration, query_line: str):
+        guild = interact.guild.id
+        query = {"query": query_line,
+                 "ch_id": interact.channel.id}
         new_obj = TwitterRecent(query,
                                 self.__headers,
-                                ctx.channel)
-        logger.info(f"add query: \"{args}\", in {ctx.channel}")
+                                interact.channel)
+        logger.info(f"add query: \"{query_line}\", in {interact.channel}")
         self.sub_json[guild]["query"].append(query)
         self.twitter_obj[guild]["query"].append(new_obj)
-        self.sub_cnt += 1
-        message = f":white_check_mark:subscribed: \"{args}\""
         save_json(self.sub_json[guild], json_path(guild))
+        self.sub_cnt += 1
+        message = f":white_check_mark:subscribed: \"{query_line}\""
         return message
-    
-    @subscribe_search.error
-    async def subscribe_search_error(self, ctx: commands.context, error: commands.CommandError):
-        if isinstance(error, commands.MissingRequiredArgument):
-            err_msg = "recieve no arguments."
-            message = ":x:`subscribe_search` require 1 argument"
-            await log.send_err("subscribe_search", message, err_msg, ctx)
     
     '''
     command subscribed():
-        argument:
+        argument: None
         send message (on success):
             "```"
             "user:"
@@ -220,12 +208,10 @@ class Twitter(commands.Cog):
         function:
             list all the subscriptions.
     '''
-    @commands.command(aliases = ["sub", "s", "S"],
-                      help = "Show all subscription with their id.",
-                      brief = "Show all subscription")
+    @app_commands.command(description = "Show all subscription with id")
     @log.commandlog
-    async def subscribed(self, ctx: commands.context):
-        guild = ctx.guild.id
+    async def subscription(self, interact: discord.Integration):
+        guild = interact.guild.id
         message = "```\n"
         message = message + "user:\n"
         for i, user in enumerate(self.sub_json[guild]["user"]):
@@ -242,19 +228,18 @@ class Twitter(commands.Cog):
     
     '''
     command update():
-        argument:
+        argument: None
         send message (on success):
             all subscribed messages
         function:
-            force to check if there is any new subscribed tweets.
+            Update Twitter immediately.
     '''
-    @commands.command(aliases = ["u", "U"],
-                      help = "Force checking the latest tweets of all subscriptions",
-                      brief = "Force checking update")
-    async def update(self, ctx: commands.context):
-        log.print_cmd("update", (), ctx)
+    @app_commands.command(description = "Update Twitter immediately")
+    @log.commandlog
+    async def update(self, interact: discord.Integration):
         async with httpx.AsyncClient() as client:
-            await self.call_update(ctx.guild.id, client)
+            await self.call_update(interact.guild.id, client)
+        return {"content": "done!", "ephemeral": True}
     
     async def call_update(self, guild: int, client: httpx.AsyncClient):
         all_tasks = []
@@ -285,90 +270,60 @@ class Twitter(commands.Cog):
     '''
     command delete_user(args):
         argument:
-            args (required): user subscription index to be deleted
+            type ("user" or "query"): user or query
+            search (required): subscription index to be deleted
         send message (on success):
-            ":white_check_mark:Deubscribed: @{username}"
+            user:
+                ":white_check_mark:Deubscribed: @{username}"
+            query:
+                ":white_check_mark:Deubscribed: \"{query}\""
         function:
-            delete the subscription to the specific user.
-            on success, self.twitter_obj["user"], self.sub_json["user"] and the json file will be updated.
+            user:
+                delete the subscription to the specific user.
+            query:
+                delete the subscription to the specific search query.
+            self.twitter_obj, self.sub_json and the json file will be updated.
     '''
-    @commands.command(aliases = ["del_user", "du", "DU"],
-                      help = "Delete the Subscription of the Twitter user with the given id\n"
-                             "The id can be find using subscribed command.",
-                      brief = "Delete the Twitter user",
-                      usage = "<id>")
+    @app_commands.command(description = "Delete the Subscription of the Twitter")
+    @app_commands.describe(type = "user or query",
+                           id = "user or query id")
     @log.commandlog
-    async def delete_user(self, ctx: commands.context, args: str):
-        guild = ctx.guild.id
-        try:
-            del_num = int(args)
-        except ValueError:
-            err_msg = f"invalid argument: {args}"
-            message = ":x:`delete_user` require integer as argument"
-            return (message, err_msg)
-        
-        if del_num >= len(self.twitter_obj[guild]["user"]):
-            err_msg = f"index out of bound: {del_num}"
+    async def delete(self, interact: discord.Integration,
+                     type: Literal["user", "query"],
+                     id: app_commands.Range[int, 0, None]):
+        if type == "user":
+            message = self.delete_user(interact, id)
+        else:
+            message = self.delete_search(interact, id)
+        return message
+    
+    def delete_user(self, interact: discord.Integration, id: int):
+        guild = interact.guild.id
+        if id >= len(self.twitter_obj[guild]["user"]):
+            err_msg = f"index out of bound: {id}"
             message = ":x:index out of bound"
             return (message, err_msg)
         
-        self.twitter_obj[guild]["user"].pop(del_num)
+        self.twitter_obj[guild]["user"].pop(id)
         self.sub_cnt -= 1
-        username = self.sub_json[guild]["user"].pop(del_num)["username"]
+        username = self.sub_json[guild]["user"].pop(id)["username"]
         message = f":white_check_mark:Deubscribed: @{username}"
         save_json(self.sub_json[guild], json_path(guild))
         return message
     
-    @delete_user.error
-    async def delete_user_error(self, ctx: commands.context, error: commands.CommandError):
-        if isinstance(error, commands.MissingRequiredArgument):
-            err_msg = "recieve no arguments."
-            message = ":x:`delete_user` require 1 argument"
-            await log.send_err("delete_user", message, err_msg, ctx)
-    
-    '''
-    command delete_search(args):
-        argument:
-            args (required): query subscription index to be deleted
-        send message (on success):
-            ":white_check_mark:Deubscribed: \"{query}\""
-        function:
-            delete the subscription to the specific search query.
-            on success, self.twitter_obj["query"], self.sub_json["query"] and the json file will be updated.
-    '''
-    @commands.command(aliases = ["del_search", "ds", "DS"],
-                      help = "Delete the Subscription of the Twitter search with the given id\n"
-                             "The id can be find using subscribed command.",
-                      brief = "Delete the Twitter search",
-                      usage = "<id>")
-    @log.commandlog
-    async def delete_search(self, ctx: commands.CommandError, args: str):
-        guild = ctx.guild.id
-        try:
-            del_num = int(args)
-        except ValueError:
-            err_msg = f"invalid argument: {args}"
-            message = ":x:`delete_search` require integer as argument"
-            return (message, err_msg)
-        
-        if del_num >= len(self.twitter_obj[guild]["query"]):
-            err_msg = f"index out of bound: {del_num}"
+    def delete_search(self, interact: discord.Integration, id: int):
+        guild = interact.guild.id
+        if id >= len(self.twitter_obj[guild]["query"]):
+            err_msg = f"index out of bound: {id}"
             message = ":x:index out of bound"
             return (message, err_msg)
         
-        self.twitter_obj[guild]["query"].pop(del_num)
+        self.twitter_obj[guild]["query"].pop(id)
         self.sub_cnt -= 1
-        query = self.sub_json[guild]["query"].pop(del_num)["query"]
+        query = self.sub_json[guild]["query"].pop(id)["query"]
         message = f":white_check_mark:Deubscribed: \"{query}\""
         save_json(self.sub_json[guild], json_path(guild))
         return message
-    
-    @delete_search.error
-    async def delete_search_error(self, ctx: commands.context, error: commands.CommandError):
-        if isinstance(error, commands.MissingRequiredArgument):
-            err_msg = "recieve no arguments."
-            message = ":x:`delete_search` require 1 argument"
-            await log.send_err("delete_search", message, err_msg, ctx)
 
     def cog_unload(self):
         if not self.update_timer.is_being_cancelled():

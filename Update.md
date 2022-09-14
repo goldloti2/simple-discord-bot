@@ -205,7 +205,7 @@
 - cmds/test.py
   - rework slash command - pong
     - bug: not working now
-- TODO: ctx rename to interact (4/6) (main, ~~cog_core~~, ~~log~~, cogs\*1)
+- TODO: ctx rename to interact (5/6) (main, ~~cog_core~~, ~~log~~, ~~cogs\*3~~)
 
 2022/09/09 dev-branch, merge from main-branch
 
@@ -257,3 +257,11 @@
 
 - utils/log.py
   - fix bug - TwitterClass.request() don't work
+
+2022/09/14 dev branch - 3
+
+- cmd/twitter.py
+  - rework slash command - subscribe, subscription, update, delete
+    - subscribe combine old commands: subscribe_user and subscribe_search
+    - subscription rename from subscribed
+    - delete combine old commands: delete_user and delete_search
