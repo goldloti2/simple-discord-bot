@@ -45,10 +45,10 @@ def init_logger():
     ch.setFormatter(fmt)
     logger.addHandler(ch)
 
-def get_logger(name: str = "logger"):
+def get_logger(name = "logger"):
     return logging.getLogger(name)
 
-def logger_head(interact: discord.Integration, cmd: str, mode = "info"):
+def logger_head(interact: Union[discord.Integration, discord.TextChannel], cmd: str, mode = "info"):
     if mode == "info":
         return f"@{interact.guild.name}:({cmd})"
     elif mode == "err":
@@ -60,7 +60,8 @@ logger = get_logger()
 def print_cmd(cmd: str, interact: discord.Integration, args: Optional[dict]):
     logger.info(f"{logger_head(interact, cmd)} {args}, from {interact.channel}")
 
-async def send_msg(cmd: str, message: Union[dict, str], interact: discord.Integration, mode = "send"):
+async def send_msg(cmd: str, message: Union[dict, str],
+                   interact: Union[discord.Integration, discord.TextChannel], mode = "send"):
     head = logger_head(interact, cmd)
     await ctx_send(head, message, interact, mode)
 
@@ -69,14 +70,18 @@ async def send_err(cmd: str, message: Union[dict, str], err_msg: str, interact: 
     logger.warning(f"{head} {err_msg}")
     await ctx_send(head, message, interact, "response")
 
-async def ctx_send(head: str, message: Union[dict, str], interact: discord.Integration, mode = "send"):
+async def ctx_send(head: str, message: Union[dict, str],
+                   interact: Union[discord.Integration, discord.TextChannel], mode = "send"):
     if message == "":
         return
     if isinstance(message, str):
         message = {"content":message}
     try:
         if mode == "send":
-            await interact.channel.send(**message)
+            if isinstance(interact, discord.Integration):
+                await interact.channel.send(**message)
+            elif isinstance(interact, discord.TextChannel):
+                await interact.send(**message)
         elif mode == "response":
             if not interact.response.is_done():
                 await interact.response.send_message(**message)

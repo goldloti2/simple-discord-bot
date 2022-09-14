@@ -248,7 +248,12 @@
   - rename Cog_Core to CogCore
   - rework slash commands - load, unload, reload, update (previous update_cogs)
 
-2022/09/14 dev branch
+2022/09/14 dev branch - 1
 
 - utils/cog_core.py
   - fix bug - commands string been split
+
+2022/09/14 dev branch - 2
+
+- utils/log.py
+  - fix bug - TwitterClass.request() don't work
