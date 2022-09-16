@@ -65,7 +65,7 @@ async def send_msg(cmd: str,
                    interact: Union[discord.Interaction, discord.TextChannel],
                    mode = "send"):
     head = logger_head(interact, cmd)
-    await ctx_send(head, message, interact, mode)
+    return await ctx_send(head, message, interact, mode)
 
 async def send_err(cmd: str,
                    message: Union[dict, str],
@@ -79,21 +79,24 @@ async def ctx_send(head: str,
                    message: Union[dict, str],
                    interact: Union[discord.Interaction, discord.TextChannel],
                    mode = "send"):
+    sent = None
     if message == "":
-        return
+        return sent
     if isinstance(message, str):
         message = {"content": message}
     try:
         if mode == "send":
             if isinstance(interact, discord.Interaction):
-                await interact.channel.send(**message)
+                sent = await interact.channel.send(**message)
             elif isinstance(interact, discord.TextChannel):
-                await interact.send(**message)
+                sent = await interact.send(**message)
         elif mode == "response":
             if not interact.response.is_done():
                 await interact.response.send_message(**message)
             else:
                 await interact.followup.send(**message)
+        elif mode == "edit":
+            await interact.response.edit_message(**message)
     except discord.HTTPException as e:
         logger.warning(f"{head} response failed")
         logger.debug(str(e))
@@ -106,6 +109,7 @@ async def ctx_send(head: str,
     else:
         logger.debug(f"{head} response success")
     logger.debug(f"\n{message}")
+    return sent
 
 
 def commandlog(func: Callable):
@@ -115,6 +119,9 @@ def commandlog(func: Callable):
         message = await func(*args, **kwargs)
         if isinstance(message, tuple):
             await send_err(func.__name__, message[0], message[1], args[1])
+        elif isinstance(message, dict):
+            mode = message.pop("mode", "response")
+            await send_msg(func.__name__, message, args[1], mode)
         else:
             await send_msg(func.__name__, message, args[1], "response")
     return wrapper

@@ -271,3 +271,12 @@
 - slash command rework
 - prettier style: less character per line, more readable spacing
 - several typo fix
+
+2022/09/16 bj-dev branch
+
+- Start making black jack extension
+  - new modules: cmds/black_jack.py, cmds/blackjack/BJ.py
+  - done function: join/leave start lobby
+- utils/log.py
+  - modify function - send_msg, ctx_send
+    - now able to get sent message (channel only) and edit_message (interaction only)
