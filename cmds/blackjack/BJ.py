@@ -15,7 +15,7 @@ class BJDealer(object):
         self.players.append(player)
         self.start_view = StartView(dealer = self)
         self.start_embed = {"title": "Black Jack",
-                            "description": f"lobby open. {len(self.players)} players",
+                            "description": f"{len(self.players)} players in lobby",
                             "type": "rich",
                             "fields": [
                                     {"name": "player:",
@@ -26,7 +26,7 @@ class BJDealer(object):
         sent = await send_msg("BJ lobby",
                               {"embed": embed, "view": self.start_view},
                               self.channel)
-        self.start_view.sent_message(sent)
+        self.start_view.set_sent_message(sent)
     
     def player_join(self, player: discord.Member):
         if not player in self.players:
@@ -41,15 +41,19 @@ class BJDealer(object):
         return discord.Embed.from_dict(self.start_embed)
 
     def player_update(self):
-        self.start_embed["description"] = f"lobby open. {len(self.players)} players"
+        self.start_embed["description"] = f"{len(self.players)} players in lobby"
         val = ", ".join([p.display_name for p in self.players])
         if val == "":
             val = ":x:"
         self.start_embed["fields"][0]["value"] = val
+    
+    def is_joined(self, player: discord.Member):
+        return player in self.players
+
 
 
 class StartView(discord.ui.View):
-    def __init__(self, *, timeout: Optional[float] = 30, dealer: BJDealer):
+    def __init__(self, *, timeout: Optional[float] = 10, dealer: BJDealer):
         super().__init__(timeout = timeout)
         self.dealer = dealer
     
@@ -64,8 +68,13 @@ class StartView(discord.ui.View):
                        style = discord.ButtonStyle.blurple,
                        custom_id = "start")
     async def start(self, interact: discord.Interaction, button: discord.ui):
-        embed = self.dealer.player_join(interact.user)
-        await interact.response.edit_message(embed = embed)
+        if self.dealer.is_joined(interact.user):
+            embeds = interact.message.embeds
+            await send_msg("BJ join", {"embeds": embeds, "view": None}, interact, "edit")
+            self.stop()
+        else:
+            message = {"content": "you are not in the game!", "ephemeral": True}
+            await send_msg("BJ start", message, interact, "response")
     
     @discord.ui.button(label = "leave",
                        style = discord.ButtonStyle.gray,
@@ -74,8 +83,20 @@ class StartView(discord.ui.View):
         embed = self.dealer.player_leave(interact.user)
         await send_msg("BJ leave", {"embed": embed, "view": self}, interact, "edit")
     
-    def sent_message(self, sent: discord.Message):
+    def set_sent_message(self, sent: discord.Message):
         self.sent = sent
     
     async def on_timeout(self):
-        await self.sent.delete()
+        try:
+            if len(self.dealer.players) != 0:
+                await self.sent.edit(embeds = self.sent.embeds, view = None)
+            else:
+                await self.sent.delete()
+        except discord.HTTPException as e:
+            logger.error("BJ start timeout response failed")
+            logger.debug(str(e))
+        except:
+            logger.error("BJ start timeout response error")
+            logger.debug("\n", exc_info = True)
+        else:
+            logger.debug("BJ start timeout success")
