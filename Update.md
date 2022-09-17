@@ -285,3 +285,8 @@
 
 - cmds/blackjack/BJ.py
   - done function: start game button
+
+2022/09/17 bj-dev branch
+
+- cmds/black_jack.py, cmds/blackjack/BJ.py
+  - add timer to check if game is end

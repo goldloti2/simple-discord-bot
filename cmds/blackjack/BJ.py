@@ -12,6 +12,7 @@ class BJDealer(object):
         self.players = []
     
     async def start_lobby(self, player: discord.Member):
+        self.running = True
         self.players.append(player)
         self.start_view = StartView(dealer = self)
         self.start_embed = {"title": "Black Jack",
@@ -92,6 +93,7 @@ class StartView(discord.ui.View):
                 await self.sent.edit(embeds = self.sent.embeds, view = None)
             else:
                 await self.sent.delete()
+                self.dealer.running = False
         except discord.HTTPException as e:
             logger.error("BJ start timeout response failed")
             logger.debug(str(e))

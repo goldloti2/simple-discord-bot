@@ -1,7 +1,7 @@
 from cmds.blackjack.BJ import BJDealer
 import discord
 from discord import app_commands
-from discord.ext import commands
+from discord.ext import commands, tasks
 from typing import Optional
 import utils.log as log
 
@@ -32,7 +32,27 @@ class BlackJack(commands.GroupCog):
             self.dealers[cid] = BJDealer(interact.channel)
             await self.dealers[cid].start_lobby(interact.user)
             message = {"content": "start a new game!", "ephemeral": True}
+            try:
+                self.check_timer.start()
+            except:
+                logger.error("set BJ timer failed")
+            else:
+                logger.debug("Set BJ timer success:10 sec")
             return message
+    
+    @tasks.loop(seconds = 10)
+    async def check_timer(self):
+        if not self.bot.is_closed():
+            logger.debug("BJ timer awake")
+            print(self.dealers.keys())
+            for cid in list(self.dealers.keys()):
+                if not self.dealers[cid].running:
+                    del self.dealers[cid]
+            print(self.dealers.keys())
+            print(len(self.dealers))
+            if len(self.dealers) == 0:
+                self.check_timer.stop()
+                logger.debug("BJ timer stop")
     
     '''
     command change_game(gamestat):
@@ -46,6 +66,11 @@ class BlackJack(commands.GroupCog):
     async def change_game(self, interact: discord.Interaction, gamestat: str):
         message = ":white_check_mark:Change bot game stat:"
         return message
+
+    def cog_unload(self):
+        if not self.check_timer.is_being_cancelled():
+            self.check_timer.cancel()
+            logger.debug("BJ timer removed")
 
 
 async def setup(bot: commands.Bot):
