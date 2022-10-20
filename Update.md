@@ -272,7 +272,7 @@
 - prettier style: less character per line, more readable spacing
 - several typo fix
 
-2022/10/20 merge from old-music-dev branch (done in 2021/12/05)
+2022/10/20 music-dev branch, merge from old-music-dev branch (done in 2021/12/05)
 
 - cmd/musicbot.py
   - Function is_connected() - done
@@ -282,3 +282,11 @@
   - Function reset_timer() - done
   - Command play() - done, but might have bugs
   - Command stop() - temporary for disconnect from voice channel
+
+2022/10/20 music-dev branch - 2
+
+- rework cmd/musicbot.py
+  - Function is_connected - done
+  - Command play - now can connect to voice channel
+  - Command stop - temporary for disconnect from voice channel
+- correct some document error when merging

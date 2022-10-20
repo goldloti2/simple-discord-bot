@@ -1,15 +1,15 @@
-import discord
-from discord.ext import commands
 import asyncio
+import discord
+from discord import app_commands
+from discord.ext import commands, tasks
 import time
-
+import utils.log as log
 import youtube_dl
 from youtube_dl import YoutubeDL
 
-import utils.log as log
-logger = log.getlogger()
+logger = log.get_logger()
 
-def dur2str(duration):
+def dur2str(duration: int):
     sec = duration % 60
     min = duration // 60 % 60
     hr = duration // 3600
@@ -18,21 +18,22 @@ def dur2str(duration):
 
 class MusicBot(commands.Cog):
     @log.initlog
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
         '''yt_dl & ffmpeg option'''
-        self.ytdl_opt = {"format":"bestaudio", "noplaylist":"True", "logger":log.getlogger("ytdl")}
+        self.ytdl_opt = {"format":"bestaudio", "noplaylist":"True", "logger":log.get_logger("ytdl")}
         self.ffmpeg_opt = {"before_options":"-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
                            "options":"-vn"}
 
         self.queue = []
-        self.vc = ""
+        self.vc = None
         self.timer_task = None
     
     def is_connected(self):
-        return self.vc != "" and self.vc.is_connected()
+        return self.vc != None and self.vc.is_connected()
     
+    '''
     def search_yt(self, args, requester):
         search = False
         with YoutubeDL(self.ytdl_opt) as ydl:
@@ -84,13 +85,14 @@ class MusicBot(commands.Cog):
         else:
             print("vvvvv")
             self.reset_timer()
+    '''
     
-
+    @tasks.loop(seconds = 10)
     async def inactive_timer(self):
-        await asyncio.sleep(10)
         if self.is_connected() and not self.vc.is_playing():
             await self.vc.disconnect()
             logger.info("MusicBot disconnect from voice channel")
+            self.inactive_timer.stop()
 
     def reset_timer(self):
         if self.timer_task != None:
@@ -99,36 +101,43 @@ class MusicBot(commands.Cog):
             self.timer_task = self.bot.loop.create_task(self.inactive_timer())
 
 
-    @commands.command(aliases = ["p", "P"],
-                      help = "play or add the YT music to the queue",
-                      brief = "play YT music",
-                      usage = "<YT url or keyword>")
+    @app_commands.command(description = "Play music from YouTube")
     @log.commandlog
-    async def play(self, ctx, *, args):
+    async def play(self, interact: discord.Interaction,
+                   search: str):
         if not self.is_connected():
             print("aaaaa")
-            if ctx.author.voice != None:
+            if interact.user.voice != None:
                 print("bbbbb")
-                print(self.bot.voice_clients)
                 try:
-                    self.vc = await ctx.author.voice.channel.connect(timeout = 20, reconnect = False)
+                    self.vc = await interact.user.voice.channel.connect(timeout = 20,
+                                                                        reconnect = False)
                 except asyncio.exceptions.TimeoutError:
                     err_msg = "voice channel connection timeout."
+                    message = ":x:connection timeout"
+                    return (message, err_msg)
+                except discord.ClientException:
+                    logger.info(f"MusicBot already in voice channel: {self.vc.channel}")
+                except:
+                    logger.error("voice channel connection error.")
+                    logger.debug("\n", exc_info = True)
+                    err_msg = "voice channel connection error."
                     message = ":x:connection error"
                     return (message, err_msg)
-                logger.info(f"MusicBot connect to voice channel: {self.vc.channel}")
+                else:
+                    logger.info(f"MusicBot connect to voice channel: {self.vc.channel}")
             else:
                 print("ccccc")
-                err_msg = f"{ctx.author} not in voice channel"
+                err_msg = f"{interact.user} not in voice channel"
                 message = ":x:you are not in any voice channel"
                 return (message, err_msg)
         else:
             print("ddddd")
-            if self.vc.channel != ctx.author.voice.channel:
+            if self.vc.channel != interact.user.voice.channel:
                 print("eeeee")
                 if not self.vc.is_playing():
                     print("fffff")
-                    await self.vc.move_to(ctx.author.voice.channel)
+                    await self.vc.move_to(interact.user.voice.channel)
                     logger.info(f"MusicBot connect to voice channel: {self.vc.channel}")
                 else:
                     print("ggggg")
@@ -136,35 +145,33 @@ class MusicBot(commands.Cog):
                     message = f":x:bot now playing in `{self.vc.channel}`"
                     return (message, err_msg)
 
-        print("hhhhh")
-        message = self.search_yt(args, str(ctx.author))
-        print("iiiii")
-        if not message:
-            message = f":x:can't find `{args}`"
-            print("ccccc")
-            self.reset_timer()
-        elif not self.vc.is_playing():
-            self.play_next()
-        
+        # print("hhhhh")
+        # message = self.search_yt(args, str(interact.user))
+        # print("iiiii")
+        # if not message:
+        #     message = f":x:can't find `{args}`"
+        #     print("ccccc")
+        #     self.reset_timer()
+        # elif not self.vc.is_playing():
+        #     self.play_next()
+        message = "connected"
         return message
     
-    @play.error
-    async def play_error(self, ctx, error):
-        if isinstance(error, commands.MissingRequiredArgument):
-            err_msg = "recieve no arguments."
-            message = ":x:`play` require YT url or keyword"
-            await log.send_err("play", message, err_msg, ctx)
-        else:
-            logger.error("(play error) unhandled error")
-            logger.debug("\n", exc_info = True)
+    # @play.error
+    # async def play_error(self, ctx, error):
+    #     if isinstance(error, commands.MissingRequiredArgument):
+    #         err_msg = "recieve no arguments."
+    #         message = ":x:`play` require YT url or keyword"
+    #         await log.send_err("play", message, err_msg, ctx)
+    #     else:
+    #         logger.error("(play error) unhandled error")
+    #         logger.debug("\n", exc_info = True)
 
-    @commands.command(help = "play or add the YT music to the queue",
-                      brief = "play YT music",
-                      usage = "<YT url or keyword>")
+    @app_commands.command(description = "Play music from YouTube")
     @log.commandlog
-    async def stop(self, ctx):
+    async def stop(self, interact: discord.Interaction):
         await self.vc.disconnect()
-        return ""
+        return ":white_check_mark:disconnected"
     
     
     
@@ -178,5 +185,5 @@ class MusicBot(commands.Cog):
             logger.info("MusicBot disconnect from voice channel")
 
 
-def setup(bot):
-    bot.add_cog(MusicBot(bot))
+async def setup(bot: commands.Bot):
+    await bot.add_cog(MusicBot(bot))
