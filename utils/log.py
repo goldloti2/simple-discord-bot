@@ -29,6 +29,20 @@ def init_logger():
     fh.setFormatter(fmt)
     dis_log.addHandler(fh)
 
+    ytdl_log_path = os.path.join("log", "ytdl")
+    if not os.path.isdir(ytdl_log_path):
+        os.mkdir(ytdl_log_path)
+    ytdl_log = logging.getLogger("ytdl")
+    ytdl_log.setLevel(logging.DEBUG)
+    filepath = os.path.join(ytdl_log_path, filename)
+    fh = TimedRotatingFileHandler(filename = filepath,
+                                when = "midnight",
+                                backupCount = 7,
+                                encoding = 'utf-8')
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(fmt)
+    ytdl_log.addHandler(fh)
+
     logger = logging.getLogger("logger")
     logger.setLevel(logging.DEBUG)
     filepath = os.path.join("log", filename)

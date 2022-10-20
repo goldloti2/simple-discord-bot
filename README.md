@@ -18,7 +18,9 @@ Just a simple discord bot that can search and push twitter message to your disco
 - Change bot game stat
 - Load/Unload Cogs
 
-## Python Environment Setup
+## Program Environment Setup
+
+### Python Environment Setup
 
 Python version: 3.8.2  
 Python 版本: 3.8.2  
@@ -30,6 +32,15 @@ Package需求: discord.py (2.0.1 or later), ~~requests~~, httpx
 or just run following commands:  
 或是直接執行下列命令:  
 `pip install -r requirements.txt`
+
+### FFMPEG Setup
+
+In order to use Music Bot, FFMPEG is required.
+[FFMPEG Official](https://www.ffmpeg.org/download.html "FFMPEG Official")  
+
+- For Windows:
+  1. Download the pre-build package from the official website
+  2. Unzip the file and copy the .exe files in `bin` folder to the working environment folder (usually `Script` folder).
 
 ## Discord Bot Setup
 
