@@ -291,7 +291,13 @@
   - Command stop - temporary for disconnect from voice channel
 - correct some document error when merging
 
-2022/10/21 music-dev branch
+2022/10/21 music-dev branch - 1
 
 - rework cmd/musicbot.py
   - Coroutine inactive_timer - done, sleep time needs to change when in actual use
+
+2022/10/21 music-dev branch - 2
+
+- rework cmd/musicbot.py
+  - Function search_yt - done
+  - some style correction

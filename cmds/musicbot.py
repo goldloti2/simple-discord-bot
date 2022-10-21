@@ -22,9 +22,11 @@ class MusicBot(commands.Cog):
         self.bot = bot
 
         '''yt_dl & ffmpeg option'''
-        self.ytdl_opt = {"format":"bestaudio", "noplaylist":"True", "logger":log.get_logger("ytdl")}
-        self.ffmpeg_opt = {"before_options":"-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
-                           "options":"-vn"}
+        self.ytdl_opt = {"format": "bestaudio",
+                         "noplaylist": "True",
+                         "logger": log.get_logger("ytdl")}
+        self.ffmpeg_opt = {"before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
+                           "options": "-vn"}
 
         self.queue = []
         self.vc = None
@@ -33,45 +35,53 @@ class MusicBot(commands.Cog):
     def is_connected(self):
         return self.vc != None and self.vc.is_connected()
     
-    '''
-    def search_yt(self, args, requester):
+    def search_yt(self, search_args: str, requester: str):
         search = False
         with YoutubeDL(self.ytdl_opt) as ydl:
-            if not args.startswith("https://"):
-                args = "ytsearch:" + args
+            if not search_args.startswith("https://"):
+                search_args = "ytsearch:" + search_args
                 search = True
             try:
-                info = ydl.extract_info(args, download = False)
+                info = ydl.extract_info(search_args, download = False)
             except youtube_dl.utils.DownloadError as e:
-                logger.warning(e.args[0])
-                return False
+                err_msg = e.args[0]
+                message = {"content":e.args[0], "suppress_embeds":True}
+                return (False, (message, err_msg))
             except:
                 logger.error("youtube_dl error")
                 logger.debug("\n", exc_info = True)
-                return False
-        
+                message = ":x:unexpected error occured"
+                return (False, message)
         if search:
             info = info["entries"][0]
         
-        result = {"title":info["title"],
-                  "url":info["webpage_url"],
-                  "requester":requester,
-                  "uploader":info["uploader"],
-                  "thumbnail":info["thumbnail"],
-                  "duration":info["duration"]}
+        result = {"title":     info["title"],
+                  "url":       info["webpage_url"],
+                  "requester": requester,
+                  "uploader":  info["uploader"],
+                  "thumbnail": info["thumbnail"],
+                  "duration":  info["duration"]}
         
         logger.info(f"music in queue #{len(self.queue)}: " +
-                    "{}, requested by {}, {}".format(result["title"], result["requester"], result["url"]))
-        embed = discord.Embed(title = result["title"], url = result["url"],
-                              description = "Requested by {}".format(result["requester"].split("#")[0]))
+                    result["title"] + ", requested by " +
+                    result["requester"] + ", " + result["url"])
+        
+        embed = discord.Embed(title = result["title"],
+                              url = result["url"],
+                              description = "Requested by " + result["requester"])
         embed.set_author(name = result["uploader"])
         embed.set_thumbnail(url = result["thumbnail"])
-        embed.add_field(name = "Duration", value = dur2str(result["duration"]), inline = True)
-        embed.add_field(name = "Queue Position", value = f"#{len(self.queue)}", inline = True)
+        embed.add_field(name = "Duration",
+                        value = dur2str(result["duration"]),
+                        inline = True)
+        embed.add_field(name = "Queue Position",
+                        value = f"#{len(self.queue)}",
+                        inline = True)
 
         self.queue.append(result)
-        return {"embed":embed}
+        return (True, {"embed": embed})
     
+    '''
     def play_next(self):
         print("aaa is playing:", self.vc.is_playing())
         print("aaa is paused:", self.vc.is_paused())
@@ -87,7 +97,7 @@ class MusicBot(commands.Cog):
             self.reset_timer()
     '''
     
-    @tasks.loop(seconds = 10, count = 1)
+    @tasks.loop(seconds = 30, count = 1)
     async def inactive_timer(self):
         pass
     
@@ -106,6 +116,7 @@ class MusicBot(commands.Cog):
     @log.commandlog
     async def play(self, interact: discord.Interaction,
                    search: str):
+        await interact.response.defer()
         if not self.is_connected():
             print("aaaaa")
             if interact.user.voice != None:
@@ -146,17 +157,14 @@ class MusicBot(commands.Cog):
                     message = f":x:bot now playing in `{self.vc.channel}`"
                     return (message, err_msg)
 
-        # print("hhhhh")
-        # message = self.search_yt(args, str(interact.user))
-        # print("iiiii")
-        # if not message:
-        #     message = f":x:can't find `{args}`"
-        #     print("ccccc")
-        #     self.reset_timer()
+        print("hhhhh")
+        succ, message = self.search_yt(search, interact.user.display_name)
+        print("iiiii")
+        if not succ:
+            print("ccccc")
         # elif not self.vc.is_playing():
         #     self.play_next()
-        message = "connected"
-        self.inactive_timer.start()
+        self.reset_timer()
         return message
     
     # @play.error
