@@ -87,18 +87,19 @@ class MusicBot(commands.Cog):
             self.reset_timer()
     '''
     
-    @tasks.loop(seconds = 10)
+    @tasks.loop(seconds = 10, count = 1)
     async def inactive_timer(self):
+        pass
+    
+    @inactive_timer.after_loop
+    async def timer_stop(self):
         if self.is_connected() and not self.vc.is_playing():
             await self.vc.disconnect()
             logger.info("MusicBot disconnect from voice channel")
-            self.inactive_timer.stop()
 
     def reset_timer(self):
-        if self.timer_task != None:
-            self.timer_task.cancel()
         if not self.vc.is_playing():
-            self.timer_task = self.bot.loop.create_task(self.inactive_timer())
+            self.inactive_timer.restart()
 
 
     @app_commands.command(description = "Play music from YouTube")
@@ -155,6 +156,7 @@ class MusicBot(commands.Cog):
         # elif not self.vc.is_playing():
         #     self.play_next()
         message = "connected"
+        self.inactive_timer.start()
         return message
     
     # @play.error

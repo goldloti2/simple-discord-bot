@@ -290,3 +290,8 @@
   - Command play - now can connect to voice channel
   - Command stop - temporary for disconnect from voice channel
 - correct some document error when merging
+
+2022/10/21 music-dev branch
+
+- rework cmd/musicbot.py
+  - Coroutine inactive_timer - done, sleep time needs to change when in actual use
