@@ -36,6 +36,7 @@ class MusicBot(commands.Cog):
 
         self.queue = []
         self.vc = None
+        self.inactive_timer.start()
     
     def is_connected(self):
         return self.vc != None and self.vc.is_connected()
@@ -47,7 +48,7 @@ class MusicBot(commands.Cog):
                 search_args = "ytsearch:" + search_args
                 search = True
             try:
-                info = ydl.extract_info(search_args)
+                info = ydl.extract_info(search_args, download = False)
             except youtube_dl.utils.DownloadError as e:
                 err_msg = e.args[0]
                 message = {"content":e.args[0], "suppress_embeds":True}
@@ -111,21 +112,12 @@ class MusicBot(commands.Cog):
             print("is paused:", self.vc.is_paused())
         else:
             print("vvvvv")
-            self.reset_timer()
     
-    @tasks.loop(seconds = 10, count = 1)
+    @tasks.loop(minutes = 1)
     async def inactive_timer(self):
-        pass
-    
-    @inactive_timer.after_loop
-    async def timer_stop(self):
         if self.is_connected() and not self.vc.is_playing():
             await self.vc.disconnect()
             logger.info("MusicBot disconnect from voice channel")
-
-    def reset_timer(self):
-        if not self.vc.is_playing():
-            self.inactive_timer.restart()
 
 
     @app_commands.command(description = "Play music from YouTube")
@@ -176,10 +168,10 @@ class MusicBot(commands.Cog):
         print("hhhhh")
         succ, message = self.search_yt(search, interact.user.display_name)
         print("iiiii")
-        if not succ:
-            print("ccccc")
-        self.play_next()
-        self.reset_timer()
+        if succ:
+            self.play_next()
+        else:
+            print("kkkkk")
         return message
     
     # @play.error
@@ -198,14 +190,10 @@ class MusicBot(commands.Cog):
         await self.vc.disconnect()
         return ":white_check_mark:disconnected"
     
-    @tasks.loop(seconds = 1, count = 1)
-    async def unload_disconnect(self):
+    async def cog_unload(self):
         if self.is_connected():
             await self.vc.disconnect()
             logger.info("MusicBot disconnect from voice channel")
-    
-    def cog_unload(self):
-        self.unload_disconnect.start()
 
 
 async def setup(bot: commands.Bot):

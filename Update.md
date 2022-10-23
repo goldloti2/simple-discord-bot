@@ -327,3 +327,10 @@
     8. `/play a` again
     9. play normally
     10. after play list exhausts, timer doesn't wake
+
+2022/10/23 music-dev branch - 3
+
+- fix bugs
+  - inactive_timer now wakes up no matter if voice channel is connected (no restart)
+- cog_unload for musicbot is now a coroutine
+- set ytdl download to False (consider download starting at another place)
