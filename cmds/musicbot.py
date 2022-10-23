@@ -2,10 +2,14 @@ import asyncio
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
+import os
 import time
 import utils.log as log
 import youtube_dl
 from youtube_dl import YoutubeDL
+
+FFMpegExe = ".\\env\\ffmpeg.exe"
+download_path = os.path.join(".", "temp", "%(title)s.%(ext)s")
 
 logger = log.get_logger()
 
@@ -23,10 +27,12 @@ class MusicBot(commands.Cog):
 
         '''yt_dl & ffmpeg option'''
         self.ytdl_opt = {"format": "bestaudio",
+                         "logger": log.get_logger("ytdl"),
                          "noplaylist": "True",
-                         "logger": log.get_logger("ytdl")}
-        self.ffmpeg_opt = {"before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
-                           "options": "-vn"}
+                         "outtmpl": download_path,
+                         "quiet": True}
+        self.ffmpeg_opt = {"executable": FFMpegExe}
+        os.makedirs("temp", exist_ok = True)
 
         self.queue = []
         self.vc = None
@@ -41,7 +47,7 @@ class MusicBot(commands.Cog):
                 search_args = "ytsearch:" + search_args
                 search = True
             try:
-                info = ydl.extract_info(search_args, download = False)
+                info = ydl.extract_info(search_args)
             except youtube_dl.utils.DownloadError as e:
                 err_msg = e.args[0]
                 message = {"content":e.args[0], "suppress_embeds":True}
@@ -59,7 +65,8 @@ class MusicBot(commands.Cog):
                   "requester": requester,
                   "uploader":  info["uploader"],
                   "thumbnail": info["thumbnail"],
-                  "duration":  info["duration"]}
+                  "duration":  info["duration"],
+                  "filename":  ydl.prepare_filename(info)}
         
         logger.info(f"music in queue #{len(self.queue)}: " +
                     result["title"] + ", requested by " +
@@ -80,23 +87,33 @@ class MusicBot(commands.Cog):
         self.queue.append(result)
         return (True, {"embed": embed})
     
-    '''
     def play_next(self):
+        if self.vc.is_playing():
+            return
         print("aaa is playing:", self.vc.is_playing())
         print("aaa is paused:", self.vc.is_paused())
         if len(self.queue) > 0:
-            pop = self.queue.pop()
-            logger.info("music now playing: {}, requested by {}, {}".format(pop["title"], pop["requester"], pop["url"]))
-            nowplay = discord.FFmpegPCMAudio(pop["url"], **self.ffmpeg_opt)
-            self.vc.play(nowplay, after = lambda e: self.play_next())
+            pop = self.queue.pop(0)
+            logger.info("music now playing: " + 
+                        pop["title"] + ", requested by " +
+                        pop["requester"] + ", " + pop["url"])
+            try:
+                nowplay = discord.FFmpegPCMAudio(source = pop["filename"], **self.ffmpeg_opt)
+            except:
+                logger.error("ffmpeg error")
+                logger.debug("\n", exc_info = True)
+            try:
+                self.vc.play(nowplay, after = lambda e: self.play_next())
+            except:
+                logger.error("vc.play error")
+                logger.debug("\n", exc_info = True)
             print("is playing:", self.vc.is_playing())
             print("is paused:", self.vc.is_paused())
         else:
             print("vvvvv")
             self.reset_timer()
-    '''
     
-    @tasks.loop(seconds = 30, count = 1)
+    @tasks.loop(seconds = 10, count = 1)
     async def inactive_timer(self):
         pass
     
@@ -161,8 +178,7 @@ class MusicBot(commands.Cog):
         print("iiiii")
         if not succ:
             print("ccccc")
-        # elif not self.vc.is_playing():
-        #     self.play_next()
+        self.play_next()
         self.reset_timer()
         return message
     
@@ -176,7 +192,7 @@ class MusicBot(commands.Cog):
     #         logger.error("(play error) unhandled error")
     #         logger.debug("\n", exc_info = True)
 
-    @app_commands.command(description = "Play music from YouTube")
+    @app_commands.command(description = "Stop music")
     @log.commandlog
     async def stop(self, interact: discord.Interaction):
         await self.vc.disconnect()
@@ -189,9 +205,7 @@ class MusicBot(commands.Cog):
             logger.info("MusicBot disconnect from voice channel")
     
     def cog_unload(self):
-        print("unload musicbot 1")
         self.unload_disconnect.start()
-        print("unload musicbot 2")
 
 
 async def setup(bot: commands.Bot):

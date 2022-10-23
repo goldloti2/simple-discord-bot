@@ -302,7 +302,28 @@
   - Function search_yt - done
   - some style correction
 
-2022/10/23 music-dev branch
+2022/10/23 music-dev branch - 1
 
 - rework cmd/musicbot.py
   - cog_unload - done
+
+2022/10/23 music-dev branch - 2
+
+- rework cmd/musicbot.py
+  - Function search_yt - can download music
+  - Function play_next - can play one music per time
+- known bugs
+  - inactive_timer works wrong when restart timer
+  - downloading music takes too long, and occupying bot
+  - when downloading for the first time, it can't be played
+  - strange stuff occured:
+    1. `/play a`
+    2. connect to voice channel
+    3. download `a`
+    4. download complete, play music, but stop right after
+    5. `/play a` again
+    6. bot is not in voice channel; but indiscord, it is in.
+    7. connection timeout
+    8. `/play a` again
+    9. play normally
+    10. after play list exhausts, timer doesn't wake
