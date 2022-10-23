@@ -30,7 +30,6 @@ class MusicBot(commands.Cog):
 
         self.queue = []
         self.vc = None
-        self.timer_task = None
     
     def is_connected(self):
         return self.vc != None and self.vc.is_connected()
@@ -183,16 +182,16 @@ class MusicBot(commands.Cog):
         await self.vc.disconnect()
         return ":white_check_mark:disconnected"
     
-    
+    @tasks.loop(seconds = 1, count = 1)
+    async def unload_disconnect(self):
+        if self.is_connected():
+            await self.vc.disconnect()
+            logger.info("MusicBot disconnect from voice channel")
     
     def cog_unload(self):
-        #if not self.timer_task.cancelled():
-        #    self.timer_task.cancel()
-        #    logger.info("twitter timer removed")
-        if self.is_connected():
-            asyncio.create_task(self.vc.disconnect())
-            time.sleep(1)
-            logger.info("MusicBot disconnect from voice channel")
+        print("unload musicbot 1")
+        self.unload_disconnect.start()
+        print("unload musicbot 2")
 
 
 async def setup(bot: commands.Bot):

@@ -301,3 +301,8 @@
 - rework cmd/musicbot.py
   - Function search_yt - done
   - some style correction
+
+2022/10/23 music-dev branch
+
+- rework cmd/musicbot.py
+  - cog_unload - done
