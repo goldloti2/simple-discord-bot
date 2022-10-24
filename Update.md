@@ -332,5 +332,12 @@
 
 - fix bugs
   - inactive_timer now wakes up no matter if voice channel is connected (no restart)
+    - *2022/10/24 note: it's an external timer, more precisely*
 - cog_unload for musicbot is now a coroutine
 - set ytdl download to False (consider download starting at another place)
+
+2022/10/24 music-dev branch
+
+- add a lock to inactive_timer, preventing from disconnecting when play is called
+- rename ydl to ytdl
+- make search_yt as a coroutine, and ytdl.extract_info is now async

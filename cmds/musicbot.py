@@ -36,19 +36,23 @@ class MusicBot(commands.Cog):
 
         self.queue = []
         self.vc = None
+        self.is_idle = True
         self.inactive_timer.start()
     
     def is_connected(self):
         return self.vc != None and self.vc.is_connected()
     
-    def search_yt(self, search_args: str, requester: str):
+    async def search_yt(self, search_args: str, requester: str):
         search = False
-        with YoutubeDL(self.ytdl_opt) as ydl:
+        with YoutubeDL(self.ytdl_opt) as ytdl:
             if not search_args.startswith("https://"):
                 search_args = "ytsearch:" + search_args
                 search = True
             try:
-                info = ydl.extract_info(search_args, download = False)
+                loop = self.bot.loop
+                info = await loop.run_in_executor(None,
+                                                  ytdl.extract_info,
+                                                  search_args, False)
             except youtube_dl.utils.DownloadError as e:
                 err_msg = e.args[0]
                 message = {"content":e.args[0], "suppress_embeds":True}
@@ -67,7 +71,7 @@ class MusicBot(commands.Cog):
                   "uploader":  info["uploader"],
                   "thumbnail": info["thumbnail"],
                   "duration":  info["duration"],
-                  "filename":  ydl.prepare_filename(info)}
+                  "filename":  ytdl.prepare_filename(info)}
         
         logger.info(f"music in queue #{len(self.queue)}: " +
                     result["title"] + ", requested by " +
@@ -88,7 +92,7 @@ class MusicBot(commands.Cog):
         self.queue.append(result)
         return (True, {"embed": embed})
     
-    def play_next(self):
+    def play_next(self, error = None):
         if self.vc.is_playing():
             return
         print("aaa is playing:", self.vc.is_playing())
@@ -111,11 +115,13 @@ class MusicBot(commands.Cog):
             print("is playing:", self.vc.is_playing())
             print("is paused:", self.vc.is_paused())
         else:
+            self.is_idle = True
             print("vvvvv")
     
     @tasks.loop(minutes = 1)
     async def inactive_timer(self):
-        if self.is_connected() and not self.vc.is_playing():
+        logger.debug("MusicBot timer awake")
+        if self.is_idle and self.is_connected() and not self.vc.is_playing():
             await self.vc.disconnect()
             logger.info("MusicBot disconnect from voice channel")
 
@@ -145,6 +151,7 @@ class MusicBot(commands.Cog):
                     message = ":x:connection error"
                     return (message, err_msg)
                 else:
+                    self.is_idle = False
                     logger.info(f"MusicBot connect to voice channel: {self.vc.channel}")
             else:
                 print("ccccc")
@@ -166,9 +173,9 @@ class MusicBot(commands.Cog):
                     return (message, err_msg)
 
         print("hhhhh")
-        succ, message = self.search_yt(search, interact.user.display_name)
+        succ, message = await self.search_yt(search, interact.user.display_name)
         print("iiiii")
-        if succ:
+        if succ and not self.vc.is_playing():
             self.play_next()
         else:
             print("kkkkk")
@@ -188,6 +195,7 @@ class MusicBot(commands.Cog):
     @log.commandlog
     async def stop(self, interact: discord.Interaction):
         await self.vc.disconnect()
+        self.is_idle = True
         return ":white_check_mark:disconnected"
     
     async def cog_unload(self):
