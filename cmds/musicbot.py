@@ -28,7 +28,8 @@ class MusicBot(commands.Cog):
         '''yt_dl & ffmpeg option'''
         self.ytdl_opt = {"format": "bestaudio",
                          "logger": log.get_logger("ytdl"),
-                         "noplaylist": "True",
+                         "nocheckcertificate": True,
+                         "noplaylist": True,
                          "outtmpl": download_path,
                          "quiet": True}
         self.ffmpeg_opt = {"executable": FFMpegExe}

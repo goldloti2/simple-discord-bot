@@ -336,8 +336,13 @@
 - cog_unload for musicbot is now a coroutine
 - set ytdl download to False (consider download starting at another place)
 
-2022/10/24 music-dev branch
+2022/10/24 music-dev branch - 1
 
 - add a lock to inactive_timer, preventing from disconnecting when play is called
 - rename ydl to ytdl
 - make search_yt as a coroutine, and ytdl.extract_info is now async
+
+2022/10/24 music-dev branch - 2
+
+- ytdl options added: "nocheckcertificate": True
+- ready to rewrite whole MusicBot
