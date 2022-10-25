@@ -21,15 +21,16 @@ def dur2str(duration: int):
 
 
 class MusicPlayer():
-    def __init__(self, ytdl_opt: dict, ffmpeg_opt: dict):
-        # self.tc
-        self.vc = None
+    def __init__(self, ytdl_opt: dict, ffmpeg_opt: dict, loop: asyncio.AbstractEventLoop):
         self.ytdl = YoutubeDL(ytdl_opt)
         self.ffmpeg_opt = ffmpeg_opt
+        self.loop = loop
+        self.vc = None
         self.dl_queue = asyncio.Queue()
         self.pl_queue = asyncio.Queue()
         self.end_sig = asyncio.Event()
         self.end_sig.set()
+        self.queue_cnt = 0
         self.is_terminated = False
     
     def is_connected(self):
@@ -43,6 +44,56 @@ class MusicPlayer():
         await self.vc.disconnect()
         logger.info(f"MusicBot disconnect from voice channel: {self.vc.channel}")
     
+    async def search_yt(self, search_args: str, requester: str):
+        search = False
+        if not search_args.startswith("https://"):
+            search_args = "ytsearch:" + search_args
+            search = True
+        try:
+            info = await self.loop.run_in_executor(None,
+                                                   self.ytdl.extract_info,
+                                                   search_args, False)
+        except youtube_dl.utils.DownloadError as e:
+            err_msg = e.args[0]
+            message = {"content":e.args[0], "suppress_embeds":True}
+            return (message, err_msg)
+        except:
+            logger.error("youtube_dl error")
+            logger.debug("\n", exc_info = True)
+            message = ":x:unexpected error occured"
+            return message
+        if search:
+            info = info["entries"][0]
+        
+        result = {"title":     info["title"],
+                  "url":       info["webpage_url"],
+                  "requester": requester,
+                  "uploader":  info["uploader"],
+                  "thumbnail": info["thumbnail"],
+                  "duration":  info["duration"],
+                  "filename":  self.ytdl.prepare_filename(info)}
+        
+        logger.info(f"music in queue #{self.queue_cnt}: " +
+                    result["title"] + ", requested by " +
+                    result["requester"] + ", " + result["url"])
+        
+        embed = discord.Embed(title = result["title"],
+                              url = result["url"],
+                              description = "Requested by " + result["requester"])
+        embed.set_author(name = result["uploader"])
+        embed.set_thumbnail(url = result["thumbnail"])
+        embed.add_field(name = "Duration",
+                        value = dur2str(result["duration"]),
+                        inline = True)
+        embed.add_field(name = "Queue Position",
+                        value = f"#{self.queue_cnt}",
+                        inline = True)
+
+        self.queue_cnt += 1
+        await self.dl_queue.put(result)
+        print(self.dl_queue.qsize())
+        return {"embed": embed}
+    
     async def new_play(self, interact: discord.Interaction, search: str):
         print("eeeee")
         if self.vc == None:
@@ -50,6 +101,7 @@ class MusicPlayer():
             try:
                 self.vc = await interact.user.voice.channel.connect(timeout = 20,
                                                                     reconnect = False)
+                self.tc = interact.channel
             except asyncio.exceptions.TimeoutError:
                 err_msg = "voice channel connection timeout."
                 message = ":x:connection timeout"
@@ -68,13 +120,14 @@ class MusicPlayer():
             print("ggggg")
             if not self.is_playing():
                 await self.vc.move_to(interact.user.voice.channel)
+                self.tc = interact.channel
                 logger.info(f"MusicBot connect to voice channel: {self.vc.channel}")
             else:
                 err_msg = f"now playing in voice channel:{self.vc.channel}"
                 message = f":x:bot now playing in `{self.vc.channel}`"
                 return (message, err_msg)
 
-        message = "connected"
+        message = await self.search_yt(search, interact.user.display_name)
         return message
 
 
@@ -99,56 +152,6 @@ class MusicBot(commands.Cog):
     
     def is_connected(self):
         return self.vc != None and self.vc.is_connected()
-    
-    async def search_yt(self, search_args: str, requester: str):
-        search = False
-        with YoutubeDL(self.ytdl_opt) as ytdl:
-            if not search_args.startswith("https://"):
-                search_args = "ytsearch:" + search_args
-                search = True
-            try:
-                loop = self.bot.loop
-                info = await loop.run_in_executor(None,
-                                                  ytdl.extract_info,
-                                                  search_args, False)
-            except youtube_dl.utils.DownloadError as e:
-                err_msg = e.args[0]
-                message = {"content":e.args[0], "suppress_embeds":True}
-                return (False, (message, err_msg))
-            except:
-                logger.error("youtube_dl error")
-                logger.debug("\n", exc_info = True)
-                message = ":x:unexpected error occured"
-                return (False, message)
-        if search:
-            info = info["entries"][0]
-        
-        result = {"title":     info["title"],
-                  "url":       info["webpage_url"],
-                  "requester": requester,
-                  "uploader":  info["uploader"],
-                  "thumbnail": info["thumbnail"],
-                  "duration":  info["duration"],
-                  "filename":  ytdl.prepare_filename(info)}
-        
-        logger.info(f"music in queue #{len(self.queue)}: " +
-                    result["title"] + ", requested by " +
-                    result["requester"] + ", " + result["url"])
-        
-        embed = discord.Embed(title = result["title"],
-                              url = result["url"],
-                              description = "Requested by " + result["requester"])
-        embed.set_author(name = result["uploader"])
-        embed.set_thumbnail(url = result["thumbnail"])
-        embed.add_field(name = "Duration",
-                        value = dur2str(result["duration"]),
-                        inline = True)
-        embed.add_field(name = "Queue Position",
-                        value = f"#{len(self.queue)}",
-                        inline = True)
-
-        self.queue.append(result)
-        return (True, {"embed": embed})
     
     def play_next(self, error = None):
         if self.vc.is_playing():
@@ -197,7 +200,9 @@ class MusicBot(commands.Cog):
             print(gid not in self.players.keys())
             if gid not in self.players.keys() or self.players[gid].is_terminated:
                 print("qqqqq")
-                self.players[gid] = MusicPlayer(self.ytdl_opt, self.ffmpeg_opt)
+                self.players[gid] = MusicPlayer(self.ytdl_opt,
+                                                self.ffmpeg_opt,
+                                                self.bot.loop)
             print("bbbbb")
             message = await self.players[gid].new_play(interact, search)
             print("ccccc")

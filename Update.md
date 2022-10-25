@@ -347,7 +347,7 @@
 - ytdl options added: "nocheckcertificate": True
 - ready to rewrite whole MusicBot
 
-2022/10/25 music-dev branch
+2022/10/25 music-dev branch - 1
 
 - rewrite MusicBot - new class `MusicPlayer` for play queue management
 - basic voice connection/disconnection is done (without timeout disconnection)
@@ -363,3 +363,12 @@
     - check if user is in voice channel *(done)*
     - check if there is an active MusicPlayer for the guild *(done)*
   - cog_unload will call MusicPlayer.terminate()
+
+2022/10/25 music-dev branch - 2
+
+- search song info for respond is done
+- class MusicPlayer
+  - coroutine new_play - add new song to queue
+    - search yt to response with song info *(done)*
+  - coroutine search_yt - search song info
+    - search song info and put into download queue *(done)*
