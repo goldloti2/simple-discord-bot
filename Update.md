@@ -353,15 +353,15 @@
 - basic voice connection/disconnection is done (without timeout disconnection)
 - class MusicPlayer
   - coroutine new_play - add new song to queue
-    - connect to voice channel *(done)*
-    - move to new voice channel *(done)*
-    - search yt to response with song info *(on schedule)*
+    - connect to voice channel
+    - move to new voice channel
+    - *(on schedule)*: search yt to response with song info
   - coroutine terminate - terminate instance
-    - disconnect from voice channel *(done)*
+    - disconnect from voice channel
 - cog MusicBot
   - command play - call MusicPlayer.newplay()
-    - check if user is in voice channel *(done)*
-    - check if there is an active MusicPlayer for the guild *(done)*
+    - check if user is in voice channel
+    - check if there is an active MusicPlayer for the guild
   - cog_unload will call MusicPlayer.terminate()
 
 2022/10/25 music-dev branch - 2
@@ -369,6 +369,17 @@
 - search song info for respond is done
 - class MusicPlayer
   - coroutine new_play - add new song to queue
-    - search yt to response with song info *(done)*
+    - search yt to response with song info
   - coroutine search_yt - search song info
-    - search song info and put into download queue *(done)*
+    - search song info and put into download queue
+
+2022/10/25 music-dev branch - 3
+
+- download song inside the queue is done
+- class MusicPlayer
+  - coroutine download_loop - wait queue and download song
+    - loop forever and wait the queue
+    - when queue has item, pop it out and download
+  - coroutine terminate - terminate instance
+    - cancel download_loop task
+  - some log content change

@@ -32,9 +32,8 @@ class MusicPlayer():
         self.end_sig.set()
         self.queue_cnt = 0
         self.is_terminated = False
-    
-    def is_connected(self):
-        return 1
+
+        self.dl_task = self.loop.create_task(self.download_loop())
     
     def is_playing(self):
         return False
@@ -42,7 +41,33 @@ class MusicPlayer():
     async def terminate(self):
         self.is_terminated = True
         await self.vc.disconnect()
-        logger.info(f"MusicBot disconnect from voice channel: {self.vc.channel}")
+        logger.info(f"(MusicPlayer) disconnect from voice channel: {self.vc.channel}")
+        self.dl_task.cancel()
+        try:
+            await self.dl_task
+        except asyncio.CancelledError:
+            logger.debug("(MusicPlayer) download loop cancelled")
+        logger.info("(MusicPlayer) terminated")
+    
+    async def download_loop(self):
+        while(1):
+            result = await self.dl_queue.get()
+            logger.debug("(MusicPlayer) queue get: " + result["title"])
+            try:
+                await self.loop.run_in_executor(None,
+                                                self.ytdl.extract_info,
+                                                result["url"])
+            except youtube_dl.utils.DownloadError as e:
+                logger.warning("(MusicPlayer) " + e.args[0])
+                message = f"```{e.args[0]}```"
+                await log.send_msg("MusicBot", message, self.tc)
+            except:
+                logger.error("(MusicPlayer) youtube_dl download error")
+                logger.debug("\n", exc_info = True)
+                message = ":x:unexpected download error occured"
+                await log.send_msg("MusicBot", message, self.tc)
+            else:
+                logger.debug("(MusicPlayer) downloaded: " + result["title"])
     
     async def search_yt(self, search_args: str, requester: str):
         search = False
@@ -55,10 +80,10 @@ class MusicPlayer():
                                                    search_args, False)
         except youtube_dl.utils.DownloadError as e:
             err_msg = e.args[0]
-            message = {"content":e.args[0], "suppress_embeds":True}
+            message = f"```{e.args[0]}```"
             return (message, err_msg)
         except:
-            logger.error("youtube_dl error")
+            logger.error("(MusicPlayer) youtube_dl error")
             logger.debug("\n", exc_info = True)
             message = ":x:unexpected error occured"
             return message
@@ -73,9 +98,9 @@ class MusicPlayer():
                   "duration":  info["duration"],
                   "filename":  self.ytdl.prepare_filename(info)}
         
-        logger.info(f"music in queue #{self.queue_cnt}: " +
+        logger.info(f"(MusicPlayer) music in queue #{self.queue_cnt}: " +
                     result["title"] + ", requested by " +
-                    result["requester"] + ", " + result["url"])
+                    result["requester"])
         
         embed = discord.Embed(title = result["title"],
                               url = result["url"],
@@ -103,27 +128,27 @@ class MusicPlayer():
                                                                     reconnect = False)
                 self.tc = interact.channel
             except asyncio.exceptions.TimeoutError:
-                err_msg = "voice channel connection timeout."
+                err_msg = "(MusicPlayer) voice channel connection timeout."
                 message = ":x:connection timeout"
                 return (message, err_msg)
             except discord.ClientException:
-                logger.info(f"MusicBot already in voice channel: {self.vc.channel}")
+                logger.info(f"(MusicPlayer) already in voice channel: {self.vc.channel}")
             except:
-                logger.error("voice channel connection error.")
+                logger.error("(MusicPlayer) voice channel connection error.")
                 logger.debug("\n", exc_info = True)
-                err_msg = "voice channel connection error."
+                err_msg = "(MusicPlayer) voice channel connection error."
                 message = ":x:connection error"
                 return (message, err_msg)
             else:
-                logger.info(f"MusicBot connect to voice channel: {self.vc.channel}")
+                logger.info(f"(MusicPlayer) connect to voice channel: {self.vc.channel}")
         elif self.vc.channel != interact.user.voice.channel:
             print("ggggg")
             if not self.is_playing():
                 await self.vc.move_to(interact.user.voice.channel)
                 self.tc = interact.channel
-                logger.info(f"MusicBot connect to voice channel: {self.vc.channel}")
+                logger.info(f"(MusicPlayer) connect to voice channel: {self.vc.channel}")
             else:
-                err_msg = f"now playing in voice channel:{self.vc.channel}"
+                err_msg = f"(MusicPlayer) now playing in voice channel:{self.vc.channel}"
                 message = f":x:bot now playing in `{self.vc.channel}`"
                 return (message, err_msg)
 
