@@ -28,31 +28,43 @@ class MusicPlayer():
         self.vc = None
         self.dl_queue = asyncio.Queue()
         self.pl_queue = asyncio.Queue()
-        self.end_sig = asyncio.Event()
-        self.end_sig.set()
+        self.play_end = asyncio.Event()
+        self.play_end.set()
+        self.is_downloading = asyncio.Event()
+        self.is_downloading.clear()
         self.queue_cnt = 0
         self.is_terminated = False
 
         self.dl_task = self.loop.create_task(self.download_loop())
+        self.pl_task = self.loop.create_task(self.play_loop())
     
     def is_playing(self):
         return False
     
     async def terminate(self):
+        if self.is_terminated:
+            return
         self.is_terminated = True
         await self.vc.disconnect()
         logger.info(f"(MusicPlayer) disconnect from voice channel: {self.vc.channel}")
         self.dl_task.cancel()
+        self.pl_task.cancel()
         try:
             await self.dl_task
         except asyncio.CancelledError:
             logger.debug("(MusicPlayer) download loop cancelled")
+        try:
+            await self.pl_task
+        except asyncio.CancelledError:
+            logger.debug("(MusicPlayer) play loop cancelled")
         logger.info("(MusicPlayer) terminated")
     
     async def download_loop(self):
         while(1):
+            logger.debug("(MusicPlayer) wait download queue")
             result = await self.dl_queue.get()
-            logger.debug("(MusicPlayer) queue get: " + result["title"])
+            logger.debug("(MusicPlayer) download queue get: " + result["title"])
+            self.is_downloading.set()
             try:
                 await self.loop.run_in_executor(None,
                                                 self.ytdl.extract_info,
@@ -67,7 +79,37 @@ class MusicPlayer():
                 message = ":x:unexpected download error occured"
                 await log.send_msg("MusicBot", message, self.tc)
             else:
+                await self.pl_queue.put(result)
                 logger.debug("(MusicPlayer) downloaded: " + result["title"])
+    
+    async def play_loop(self):
+        while(1):
+            await self.play_end.wait()
+            logger.debug("(MusicPlayer) wait is_downloading")
+            try:
+                await asyncio.wait_for(self.is_downloading.wait(), 10)
+                logger.debug("(MusicPlayer) is_downloading is set")
+                self.is_downloading.clear()
+            except asyncio.TimeoutError:
+                logger.debug("(MusicPlayer) play loop timeout")
+                await self.terminate()
+                break
+            await self.play_end.wait()
+            self.play_end.clear()
+            logger.debug("(MusicPlayer) wait play queue")
+            result = await self.pl_queue.get()
+            logger.debug("(MusicPlayer) play queue get: " + result["title"])
+            try:
+                nowplay = discord.FFmpegPCMAudio(source = result["filename"], **self.ffmpeg_opt)
+            except:
+                logger.warning("(MusicPlayer) ffmpeg error")
+                logger.debug("\n", exc_info = True)
+            try:
+                self.vc.play(nowplay,
+                             after = lambda _: self.loop.call_soon_threadsafe(self.play_end.set))
+            except:
+                logger.warning("(MusicPlayer) vc.play error")
+                logger.debug("\n", exc_info = True)
     
     async def search_yt(self, search_args: str, requester: str):
         search = False
@@ -175,35 +217,6 @@ class MusicBot(commands.Cog):
         self.players: dict[int, MusicPlayer] = {}
         # self.inactive_timer.start()
     
-    def is_connected(self):
-        return self.vc != None and self.vc.is_connected()
-    
-    def play_next(self, error = None):
-        if self.vc.is_playing():
-            return
-        print("aaa is playing:", self.vc.is_playing())
-        print("aaa is paused:", self.vc.is_paused())
-        if len(self.queue) > 0:
-            pop = self.queue.pop(0)
-            logger.info("music now playing: " + 
-                        pop["title"] + ", requested by " +
-                        pop["requester"] + ", " + pop["url"])
-            try:
-                nowplay = discord.FFmpegPCMAudio(source = pop["filename"], **self.ffmpeg_opt)
-            except:
-                logger.error("ffmpeg error")
-                logger.debug("\n", exc_info = True)
-            try:
-                self.vc.play(nowplay, after = lambda e: self.play_next())
-            except:
-                logger.error("vc.play error")
-                logger.debug("\n", exc_info = True)
-            print("is playing:", self.vc.is_playing())
-            print("is paused:", self.vc.is_paused())
-        else:
-            self.is_idle = True
-            print("vvvvv")
-    
     @tasks.loop(minutes = 1)
     async def inactive_timer(self):
         pass
@@ -237,65 +250,6 @@ class MusicBot(commands.Cog):
             err_msg = f"{interact.user} not in voice channel"
             message = ":x:you are not in any voice channel"
             return (message, err_msg)
-        # if not self.is_connected():
-        #     print("aaaaa")
-        #     if interact.user.voice != None:
-        #         print("bbbbb")
-        #         try:
-        #             self.vc = await interact.user.voice.channel.connect(timeout = 20,
-        #                                                                 reconnect = False)
-        #         except asyncio.exceptions.TimeoutError:
-        #             err_msg = "voice channel connection timeout."
-        #             message = ":x:connection timeout"
-        #             return (message, err_msg)
-        #         except discord.ClientException:
-        #             logger.info(f"MusicBot already in voice channel: {self.vc.channel}")
-        #         except:
-        #             logger.error("voice channel connection error.")
-        #             logger.debug("\n", exc_info = True)
-        #             err_msg = "voice channel connection error."
-        #             message = ":x:connection error"
-        #             return (message, err_msg)
-        #         else:
-        #             self.is_idle = False
-        #             logger.info(f"MusicBot connect to voice channel: {self.vc.channel}")
-        #     else:
-        #         print("ccccc")
-        #         err_msg = f"{interact.user} not in voice channel"
-        #         message = ":x:you are not in any voice channel"
-        #         return (message, err_msg)
-        # else:
-        #     print("ddddd")
-        #     if self.vc.channel != interact.user.voice.channel:
-        #         print("eeeee")
-        #         if not self.vc.is_playing():
-        #             print("fffff")
-        #             await self.vc.move_to(interact.user.voice.channel)
-        #             logger.info(f"MusicBot connect to voice channel: {self.vc.channel}")
-        #         else:
-        #             print("ggggg")
-        #             err_msg = f"now playing in voice channel:{self.vc.channel}"
-        #             message = f":x:bot now playing in `{self.vc.channel}`"
-        #             return (message, err_msg)
-
-        # print("hhhhh")
-        # succ, message = await self.search_yt(search, interact.user.display_name)
-        # print("iiiii")
-        # if succ and not self.vc.is_playing():
-        #     self.play_next()
-        # else:
-        #     print("kkkkk")
-        # return message
-    
-    # @play.error
-    # async def play_error(self, ctx, error):
-    #     if isinstance(error, commands.MissingRequiredArgument):
-    #         err_msg = "recieve no arguments."
-    #         message = ":x:`play` require YT url or keyword"
-    #         await log.send_err("play", message, err_msg, ctx)
-    #     else:
-    #         logger.error("(play error) unhandled error")
-    #         logger.debug("\n", exc_info = True)
 
     @app_commands.command(description = "Stop music")
     @log.commandlog

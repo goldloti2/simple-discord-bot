@@ -383,3 +383,13 @@
   - coroutine terminate - terminate instance
     - cancel download_loop task
   - some log content change
+
+2022/10/26 music-dev branch
+
+- play loop is done, now can actually play music in queue
+- command done: play
+- command TODO: pause, skip, stop, list
+- class MusicPlayer
+  - coroutine play_loop - play songs in queue
+    - get song from queue and play
+    - if it's not playing nor downloading for 10 sec, self terminated
