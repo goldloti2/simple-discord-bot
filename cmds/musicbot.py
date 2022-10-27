@@ -30,8 +30,8 @@ class MusicPlayer():
         self.pl_queue = asyncio.Queue()
         self.play_end = asyncio.Event()
         self.play_end.set()
-        self.is_downloading = asyncio.Event()
-        self.is_downloading.clear()
+        self.is_busy = asyncio.Event()
+        self.is_busy.clear()
         self.queue_cnt = 0
         self.is_terminated = False
 
@@ -39,7 +39,7 @@ class MusicPlayer():
         self.pl_task = self.loop.create_task(self.play_loop())
     
     def is_playing(self):
-        return False
+        return self.vc.is_playing() or self.vc.is_paused() or self.is_busy.is_set()
     
     async def terminate(self):
         if self.is_terminated:
@@ -64,7 +64,7 @@ class MusicPlayer():
             logger.debug("(MusicPlayer) wait download queue")
             result = await self.dl_queue.get()
             logger.debug("(MusicPlayer) download queue get: " + result["title"])
-            self.is_downloading.set()
+            self.is_busy.set()
             try:
                 await self.loop.run_in_executor(None,
                                                 self.ytdl.extract_info,
@@ -85,20 +85,22 @@ class MusicPlayer():
     async def play_loop(self):
         while(1):
             await self.play_end.wait()
-            logger.debug("(MusicPlayer) wait is_downloading")
+            logger.debug("(MusicPlayer) wait is_busy")
             try:
-                await asyncio.wait_for(self.is_downloading.wait(), 10)
-                logger.debug("(MusicPlayer) is_downloading is set")
-                self.is_downloading.clear()
+                await asyncio.wait_for(self.is_busy.wait(), 10)
+                logger.debug("(MusicPlayer) is_busy is set")
             except asyncio.TimeoutError:
                 logger.debug("(MusicPlayer) play loop timeout")
-                await self.terminate()
+                self.loop.create_task(self.terminate())
                 break
             await self.play_end.wait()
             self.play_end.clear()
             logger.debug("(MusicPlayer) wait play queue")
             result = await self.pl_queue.get()
             logger.debug("(MusicPlayer) play queue get: " + result["title"])
+            if self.pl_queue.empty():
+                self.is_busy.clear()
+                logger.debug("(MusicPlayer) play queue is empty. is_busy clear")
             try:
                 nowplay = discord.FFmpegPCMAudio(source = result["filename"], **self.ffmpeg_opt)
             except:
@@ -158,13 +160,10 @@ class MusicPlayer():
 
         self.queue_cnt += 1
         await self.dl_queue.put(result)
-        print(self.dl_queue.qsize())
         return {"embed": embed}
     
     async def new_play(self, interact: discord.Interaction, search: str):
-        print("eeeee")
         if self.vc == None:
-            print("fffff")
             try:
                 self.vc = await interact.user.voice.channel.connect(timeout = 20,
                                                                     reconnect = False)
@@ -184,7 +183,6 @@ class MusicPlayer():
             else:
                 logger.info(f"(MusicPlayer) connect to voice channel: {self.vc.channel}")
         elif self.vc.channel != interact.user.voice.channel:
-            print("ggggg")
             if not self.is_playing():
                 await self.vc.move_to(interact.user.voice.channel)
                 self.tc = interact.channel
@@ -232,21 +230,14 @@ class MusicBot(commands.Cog):
                    search: str):
         await interact.response.defer()
         if interact.user.voice != None:
-            print("aaaaa")
             gid = interact.guild_id
-            print(gid)
-            print(gid not in self.players.keys())
             if gid not in self.players.keys() or self.players[gid].is_terminated:
-                print("qqqqq")
                 self.players[gid] = MusicPlayer(self.ytdl_opt,
                                                 self.ffmpeg_opt,
                                                 self.bot.loop)
-            print("bbbbb")
             message = await self.players[gid].new_play(interact, search)
-            print("ccccc")
             return message
         else:
-            print("ddddd")
             err_msg = f"{interact.user} not in voice channel"
             message = ":x:you are not in any voice channel"
             return (message, err_msg)

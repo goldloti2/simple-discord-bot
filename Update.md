@@ -352,10 +352,10 @@
 - rewrite MusicBot - new class `MusicPlayer` for play queue management
 - basic voice connection/disconnection is done (without timeout disconnection)
 - class MusicPlayer
-  - coroutine new_play - add new song to queue
+  - coroutine new_play - add new music to queue
     - connect to voice channel
     - move to new voice channel
-    - *(on schedule)*: search yt to response with song info
+    - *(on schedule)*: search yt to response with music info
   - coroutine terminate - terminate instance
     - disconnect from voice channel
 - cog MusicBot
@@ -366,18 +366,18 @@
 
 2022/10/25 music-dev branch - 2
 
-- search song info for respond is done
+- search music info for respond is done
 - class MusicPlayer
-  - coroutine new_play - add new song to queue
-    - search yt to response with song info
-  - coroutine search_yt - search song info
-    - search song info and put into download queue
+  - coroutine new_play - add new music to queue
+    - search yt to response with music info
+  - coroutine search_yt - search music info
+    - search music info and put into download queue
 
 2022/10/25 music-dev branch - 3
 
-- download song inside the queue is done
+- download music inside the queue is done
 - class MusicPlayer
-  - coroutine download_loop - wait queue and download song
+  - coroutine download_loop - wait queue and download music
     - loop forever and wait the queue
     - when queue has item, pop it out and download
   - coroutine terminate - terminate instance
@@ -390,6 +390,13 @@
 - command done: play
 - command TODO: pause, skip, stop, list
 - class MusicPlayer
-  - coroutine play_loop - play songs in queue
-    - get song from queue and play
+  - coroutine play_loop - play musics in queue
+    - get music from queue and play
     - if it's not playing nor downloading for 10 sec, self terminated
+
+2022/10/27 music-dev branch
+
+- bug fixed: when more than 2 downloaded music are in queue, stop playing from the 2nd
+- musicbot won't move to other channel if it is still playing
+- remove no longer used debug prints
+- typo fixed in documents
