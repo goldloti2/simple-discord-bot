@@ -394,9 +394,13 @@
     - get music from queue and play
     - if it's not playing nor downloading for 10 sec, self terminated
 
-2022/10/27 music-dev branch
+2022/10/27 music-dev branch - 1
 
 - bug fixed: when more than 2 downloaded music are in queue, stop playing from the 2nd
 - musicbot won't move to other channel if it is still playing
 - remove no longer used debug prints
 - typo fixed in documents
+
+2022/10/27 music-dev branch - 2
+
+- extract user and player active check section to be an independent function

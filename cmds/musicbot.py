@@ -2,6 +2,7 @@ import asyncio
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
+from enum import Enum
 import os
 import utils.log as log
 import youtube_dl
@@ -17,6 +18,11 @@ def dur2str(duration: int):
     min = duration // 60 % 60
     hr = duration // 3600
     return f"{hr:02d}:{min:02d}:{sec:02d}"
+
+class ActiveStatus(Enum):
+    ALL_ACTIVE = 1
+    USER_INACTIVE = 2
+    PLAYER_INACTIVE = 3
 
 
 
@@ -223,24 +229,36 @@ class MusicBot(commands.Cog):
         #     await self.vc.disconnect()
         #     logger.info("MusicBot disconnect from voice channel")
 
+    async def check_user_player_status(self, interact: discord.Interaction):
+        await interact.response.defer()
+        if interact.user.voice != None:
+            gid = interact.guild_id
+            if gid not in self.players.keys() or self.players[gid].is_terminated:
+                err_msg = f"no MusicPlayer in {interact.guild}"
+                message = ":x:no MusicPlayer here"
+                return ActiveStatus.PLAYER_INACTIVE, (message, err_msg)
+            else:
+                message = "all green"
+                return ActiveStatus.ALL_ACTIVE, message
+        else:
+            err_msg = f"{interact.user} not in voice channel"
+            message = ":x:you are not in any voice channel"
+            return ActiveStatus.USER_INACTIVE, (message, err_msg)
 
     @app_commands.command(description = "Play music from YouTube")
     @log.commandlog
     async def play(self, interact: discord.Interaction,
                    search: str):
-        await interact.response.defer()
-        if interact.user.voice != None:
-            gid = interact.guild_id
-            if gid not in self.players.keys() or self.players[gid].is_terminated:
-                self.players[gid] = MusicPlayer(self.ytdl_opt,
-                                                self.ffmpeg_opt,
-                                                self.bot.loop)
-            message = await self.players[gid].new_play(interact, search)
+        status, message = await self.check_user_player_status(interact)
+        gid = interact.guild_id
+        if status == ActiveStatus.USER_INACTIVE:
             return message
-        else:
-            err_msg = f"{interact.user} not in voice channel"
-            message = ":x:you are not in any voice channel"
-            return (message, err_msg)
+        elif status == ActiveStatus.PLAYER_INACTIVE:
+            self.players[gid] = MusicPlayer(self.ytdl_opt,
+                                            self.ffmpeg_opt,
+                                            self.bot.loop)
+        message = await self.players[gid].new_play(interact, search)
+        return message
 
     @app_commands.command(description = "Stop music")
     @log.commandlog
