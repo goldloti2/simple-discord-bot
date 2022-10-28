@@ -419,3 +419,7 @@
     - act only when user and musicbot are in the same voice channel
 - cog MusicBot
   - command pause_resume - call MusicPlayer.pause_resume()
+
+2022/10/28 music-dev branch - 3
+
+- more information send to text channel

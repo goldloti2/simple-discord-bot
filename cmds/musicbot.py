@@ -114,12 +114,18 @@ class MusicPlayer():
             except:
                 logger.warning("(MusicPlayer) ffmpeg error")
                 logger.debug("\n", exc_info = True)
+                message = ":x:unexpected ffmpeg error occured"
+                await log.send_msg("MusicBot", message, self.tc)
+            message = f"now play: `{result['title']}`, in #`{result['posision']}`"
+            await log.send_msg("MusicBot", message, self.tc)
             try:
                 self.vc.play(nowplay,
                              after = lambda _: self.loop.call_soon_threadsafe(self.play_end.set))
             except:
                 logger.warning("(MusicPlayer) vc.play error")
                 logger.debug("\n", exc_info = True)
+                message = ":x:unexpected play error occured"
+                await log.send_msg("MusicBot", message, self.tc)
     
     async def search_yt(self, search_args: str, requester: str):
         search = False
@@ -148,7 +154,8 @@ class MusicPlayer():
                   "uploader":  info["uploader"],
                   "thumbnail": info["thumbnail"],
                   "duration":  info["duration"],
-                  "filename":  self.ytdl.prepare_filename(info)}
+                  "filename":  self.ytdl.prepare_filename(info),
+                  "posision":  self.queue_cnt}
         
         logger.info(f"(MusicPlayer) music in queue #{self.queue_cnt}: " +
                     result["title"] + ", requested by " +
@@ -165,6 +172,7 @@ class MusicPlayer():
         embed.add_field(name = "Queue Position",
                         value = f"#{self.queue_cnt}",
                         inline = True)
+        embed.set_footer(text = "may take some time to download")
 
         self.queue_cnt += 1
         await self.dl_queue.put(result)
