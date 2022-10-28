@@ -38,6 +38,8 @@ class MusicPlayer():
         self.play_end.set()
         self.is_busy = asyncio.Event()
         self.is_busy.clear()
+        self.is_resume = asyncio.Event()
+        self.is_resume.set()
         self.queue_cnt = 0
         self.is_terminated = False
 
@@ -106,6 +108,7 @@ class MusicPlayer():
             if self.pl_queue.empty():
                 self.is_busy.clear()
                 logger.debug("(MusicPlayer) play queue is empty. is_busy clear")
+            await self.is_resume.wait()
             try:
                 nowplay = discord.FFmpegPCMAudio(source = result["filename"], **self.ffmpeg_opt)
             except:
@@ -199,6 +202,26 @@ class MusicPlayer():
 
         message = await self.search_yt(search, interact.user.display_name)
         return message
+    
+    def pause_resume(self, interact: discord.Interaction):
+        if self.vc != None and self.vc.channel == interact.user.voice.channel:
+            if self.is_resume.is_set():
+                self.is_resume.clear()
+                if self.vc.is_playing():
+                    self.vc.pause()
+                message = ":pause_button: pause"
+                logger.info(f"(MusicPlayer) music pause")
+            else:
+                self.is_resume.set()
+                if self.vc.is_paused():
+                    self.vc.resume()
+                message = ":arrow_forward: resume"
+                logger.info(f"(MusicPlayer) music resume")
+            return message
+        else:
+            err_msg = f"(MusicPlayer) now playing in voice channel:{self.vc.channel}"
+            message = f":x:bot now playing in `{self.vc.channel}`"
+            return (message, err_msg)
 
 
 
@@ -257,6 +280,15 @@ class MusicBot(commands.Cog):
                                             self.ffmpeg_opt,
                                             self.bot.loop)
         message = await self.players[gid].new_play(interact, search)
+        return message
+
+    @app_commands.command(description = "Pause or resume music")
+    @log.commandlog
+    async def pause_resume(self, interact: discord.Interaction):
+        status, message = await self.check_user_player_status(interact)
+        gid = interact.guild_id
+        if status == ActiveStatus.ALL_ACTIVE:
+            message = self.players[gid].pause_resume(interact)
         return message
 
     @app_commands.command(description = "Stop music")

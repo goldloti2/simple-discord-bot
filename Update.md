@@ -405,6 +405,17 @@
 
 - extract user and player active check section to be an independent function
 
-2022/10/28 music-dev branch
+2022/10/28 music-dev branch - 1
 
 - change play loop process - remove unnecessary event waiting
+
+2022/10/28 music-dev branch - 2
+
+- command pause/resume is done
+- command done: play, pause
+- command TODO: skip, stop, list
+- class MusicPlayer
+  - function pause_resume - pause or resume music
+    - act only when user and musicbot are in the same voice channel
+- cog MusicBot
+  - command pause_resume - call MusicPlayer.pause_resume()
