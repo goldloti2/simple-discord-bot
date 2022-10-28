@@ -423,3 +423,7 @@
 2022/10/28 music-dev branch - 3
 
 - more information send to text channel
+
+2022/10/28 music-dev branch - 4
+
+- make loop initialization and termination independent functions

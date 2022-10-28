@@ -35,16 +35,9 @@ class MusicPlayer():
         self.dl_queue = asyncio.Queue()
         self.pl_queue = asyncio.Queue()
         self.play_end = asyncio.Event()
-        self.play_end.set()
         self.is_busy = asyncio.Event()
-        self.is_busy.clear()
         self.is_resume = asyncio.Event()
-        self.is_resume.set()
-        self.queue_cnt = 0
-        self.is_terminated = False
-
-        self.dl_task = self.loop.create_task(self.download_loop())
-        self.pl_task = self.loop.create_task(self.play_loop())
+        self.init_loop()
     
     def is_playing(self):
         return self.vc.is_playing() or self.vc.is_paused() or self.is_busy.is_set()
@@ -55,6 +48,18 @@ class MusicPlayer():
         self.is_terminated = True
         await self.vc.disconnect()
         logger.info(f"(MusicPlayer) disconnect from voice channel: {self.vc.channel}")
+        await self.kill_loop()
+
+    def init_loop(self):
+        self.play_end.set()
+        self.is_busy.clear()
+        self.is_resume.set()
+        self.queue_cnt = 0
+        self.is_terminated = False
+        self.dl_task = self.loop.create_task(self.download_loop())
+        self.pl_task = self.loop.create_task(self.play_loop())
+    
+    async def kill_loop(self):
         self.dl_task.cancel()
         self.pl_task.cancel()
         try:
