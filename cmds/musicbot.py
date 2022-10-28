@@ -90,17 +90,16 @@ class MusicPlayer():
     
     async def play_loop(self):
         while(1):
+            logger.debug("(MusicPlayer) wait is_play")
             await self.play_end.wait()
+            self.play_end.clear()
             logger.debug("(MusicPlayer) wait is_busy")
             try:
                 await asyncio.wait_for(self.is_busy.wait(), 10)
-                logger.debug("(MusicPlayer) is_busy is set")
             except asyncio.TimeoutError:
                 logger.debug("(MusicPlayer) play loop timeout")
                 self.loop.create_task(self.terminate())
                 break
-            await self.play_end.wait()
-            self.play_end.clear()
             logger.debug("(MusicPlayer) wait play queue")
             result = await self.pl_queue.get()
             logger.debug("(MusicPlayer) play queue get: " + result["title"])

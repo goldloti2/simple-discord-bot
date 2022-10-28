@@ -404,3 +404,7 @@
 2022/10/27 music-dev branch - 2
 
 - extract user and player active check section to be an independent function
+
+2022/10/28 music-dev branch
+
+- change play loop process - remove unnecessary event waiting
