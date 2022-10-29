@@ -427,3 +427,14 @@
 2022/10/28 music-dev branch - 4
 
 - make loop initialization and termination independent functions
+
+2022/10/29 music-dev branch
+
+- command stop is done
+- command done: play, pause, stop
+- command TODO: skip, list
+- class MusicPlayer
+  - function stop - stop music and clear the queue
+    - act only when user and musicbot are in the same voice channel
+- cog MusicBot
+  - command stop - call MusicPlayer.stop()

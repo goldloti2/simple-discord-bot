@@ -19,6 +19,10 @@ def dur2str(duration: int):
     hr = duration // 3600
     return f"{hr:02d}:{min:02d}:{sec:02d}"
 
+def clear_queue(q: asyncio.Queue):
+    for _ in range(q.qsize()):
+        q.get_nowait()
+
 class ActiveStatus(Enum):
     ALL_ACTIVE = 1
     USER_INACTIVE = 2
@@ -49,8 +53,11 @@ class MusicPlayer():
         await self.vc.disconnect()
         logger.info(f"(MusicPlayer) disconnect from voice channel: {self.vc.channel}")
         await self.kill_loop()
+        logger.info("(MusicPlayer) terminated")
 
     def init_loop(self):
+        clear_queue(self.dl_queue)
+        clear_queue(self.pl_queue)
         self.play_end.set()
         self.is_busy.clear()
         self.is_resume.set()
@@ -58,6 +65,7 @@ class MusicPlayer():
         self.is_terminated = False
         self.dl_task = self.loop.create_task(self.download_loop())
         self.pl_task = self.loop.create_task(self.play_loop())
+        logger.debug("(MusicPlayer) loops initiated")
     
     async def kill_loop(self):
         self.dl_task.cancel()
@@ -70,7 +78,7 @@ class MusicPlayer():
             await self.pl_task
         except asyncio.CancelledError:
             logger.debug("(MusicPlayer) play loop cancelled")
-        logger.info("(MusicPlayer) terminated")
+        logger.debug("(MusicPlayer) loops cancelled")
     
     async def download_loop(self):
         while(1):
@@ -235,6 +243,20 @@ class MusicPlayer():
             err_msg = f"(MusicPlayer) now playing in voice channel:{self.vc.channel}"
             message = f":x:bot now playing in `{self.vc.channel}`"
             return (message, err_msg)
+    
+    async def stop(self, interact: discord.Interaction):
+        if self.vc != None and self.vc.channel == interact.user.voice.channel:
+            if self.is_resume.is_set():
+                self.is_resume.clear()
+                if self.vc.is_playing():
+                    self.vc.pause()
+            await self.kill_loop()
+            self.init_loop()
+            return ":stop_button: stopped"
+        else:
+            err_msg = f"(MusicPlayer) now playing in voice channel:{self.vc.channel}"
+            message = f":x:bot now playing in `{self.vc.channel}`"
+            return (message, err_msg)
 
 
 
@@ -307,9 +329,11 @@ class MusicBot(commands.Cog):
     @app_commands.command(description = "Stop music")
     @log.commandlog
     async def stop(self, interact: discord.Interaction):
-        await self.vc.disconnect()
-        self.is_idle = True
-        return ":white_check_mark:disconnected"
+        status, message = await self.check_user_player_status(interact)
+        gid = interact.guild_id
+        if status == ActiveStatus.ALL_ACTIVE:
+            message = await self.players[gid].stop(interact)
+        return message
     
     async def cog_unload(self):
         for gid in self.players.keys():
