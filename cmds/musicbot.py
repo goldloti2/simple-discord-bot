@@ -61,29 +61,33 @@ class MusicPlayer():
         self.play_end.set()
         self.is_busy.clear()
         self.is_resume.set()
-        self.queue_cnt = 0
+        self.music_list = {}
+        self.list_cnt = 0
+        self.now_play = -1
+        self.now_dl = -1
         self.is_terminated = False
-        self.dl_task = self.loop.create_task(self.download_loop())
-        self.pl_task = self.loop.create_task(self.play_loop())
+        self.dl_loop_task = self.loop.create_task(self.download_loop())
+        self.pl_loop_task = self.loop.create_task(self.play_loop())
         logger.debug("(MusicPlayer) loops initiated")
     
     async def kill_loop(self):
-        self.dl_task.cancel()
-        self.pl_task.cancel()
+        self.dl_loop_task.cancel()
+        self.pl_loop_task.cancel()
         try:
-            await self.dl_task
+            await self.dl_loop_task
         except asyncio.CancelledError:
             logger.debug("(MusicPlayer) download loop cancelled")
         try:
-            await self.pl_task
+            await self.pl_loop_task
         except asyncio.CancelledError:
             logger.debug("(MusicPlayer) play loop cancelled")
-        logger.debug("(MusicPlayer) loops cancelled")
     
     async def download_loop(self):
         while(1):
             logger.debug("(MusicPlayer) wait download queue")
-            result = await self.dl_queue.get()
+            now_dl = await self.dl_queue.get()
+            result = self.music_list[now_dl]
+            self.now_dl = now_dl
             logger.debug("(MusicPlayer) download queue get: " + result["title"])
             self.is_busy.set()
             try:
@@ -100,7 +104,7 @@ class MusicPlayer():
                 message = ":x:unexpected download error occured"
                 await log.send_msg("MusicBot", message, self.tc)
             else:
-                await self.pl_queue.put(result)
+                await self.pl_queue.put(now_dl)
                 logger.debug("(MusicPlayer) downloaded: " + result["title"])
     
     async def play_loop(self):
@@ -116,7 +120,9 @@ class MusicPlayer():
                 self.loop.create_task(self.terminate())
                 break
             logger.debug("(MusicPlayer) wait play queue")
-            result = await self.pl_queue.get()
+            now_play = await self.pl_queue.get()
+            result = self.music_list[now_play]
+            self.now_play = now_play
             logger.debug("(MusicPlayer) play queue get: " + result["title"])
             if self.pl_queue.empty():
                 self.is_busy.clear()
@@ -129,7 +135,7 @@ class MusicPlayer():
                 logger.debug("\n", exc_info = True)
                 message = ":x:unexpected ffmpeg error occured"
                 await log.send_msg("MusicBot", message, self.tc)
-            message = f"now play: `{result['title']}`, in #`{result['posision']}`"
+            message = f"now play: `{result['title']}`, in #`{now_play}`"
             await log.send_msg("MusicBot", message, self.tc)
             try:
                 self.vc.play(nowplay,
@@ -167,10 +173,11 @@ class MusicPlayer():
                   "uploader":  info["uploader"],
                   "thumbnail": info["thumbnail"],
                   "duration":  info["duration"],
-                  "filename":  self.ytdl.prepare_filename(info),
-                  "posision":  self.queue_cnt}
+                  "filename":  self.ytdl.prepare_filename(info)}
+        list_cnt = self.list_cnt
+        self.music_list[list_cnt] = result
         
-        logger.info(f"(MusicPlayer) music in queue #{self.queue_cnt}: " +
+        logger.info(f"(MusicPlayer) music in queue #{list_cnt}: " +
                     result["title"] + ", requested by " +
                     result["requester"])
         
@@ -183,12 +190,12 @@ class MusicPlayer():
                         value = dur2str(result["duration"]),
                         inline = True)
         embed.add_field(name = "Queue Position",
-                        value = f"#{self.queue_cnt}",
+                        value = f"#{list_cnt}",
                         inline = True)
         embed.set_footer(text = "may take some time to download")
 
-        self.queue_cnt += 1
-        await self.dl_queue.put(result)
+        await self.dl_queue.put(list_cnt)
+        self.list_cnt = list_cnt + 1
         return {"embed": embed}
     
     async def new_play(self, interact: discord.Interaction, search: str):
@@ -253,6 +260,23 @@ class MusicPlayer():
             await self.kill_loop()
             self.init_loop()
             return ":stop_button: stopped"
+        else:
+            err_msg = f"(MusicPlayer) now playing in voice channel:{self.vc.channel}"
+            message = f":x:bot now playing in `{self.vc.channel}`"
+            return (message, err_msg)
+    
+    def playlist(self, interact: discord.Interaction):
+        if self.vc != None and self.vc.channel == interact.user.voice.channel:
+            message = "```\n"
+            for num in self.music_list.keys():
+                if self.now_play == num:
+                    message += f"*{num:2d}) "
+                else:
+                    message += f" {num:2d}) "
+                message += self.music_list[num]["title"]
+                message += f" - requested by {self.music_list[num]['requester']}\n"
+            message += "```"
+            return message
         else:
             err_msg = f"(MusicPlayer) now playing in voice channel:{self.vc.channel}"
             message = f":x:bot now playing in `{self.vc.channel}`"
@@ -326,13 +350,22 @@ class MusicBot(commands.Cog):
             message = self.players[gid].pause_resume(interact)
         return message
 
-    @app_commands.command(description = "Stop music")
+    @app_commands.command(description = "Stop music and clear the queue")
     @log.commandlog
     async def stop(self, interact: discord.Interaction):
         status, message = await self.check_user_player_status(interact)
         gid = interact.guild_id
         if status == ActiveStatus.ALL_ACTIVE:
             message = await self.players[gid].stop(interact)
+        return message
+
+    @app_commands.command(description = "List music in queue")
+    @log.commandlog
+    async def playlist(self, interact: discord.Interaction):
+        status, message = await self.check_user_player_status(interact)
+        gid = interact.guild_id
+        if status == ActiveStatus.ALL_ACTIVE:
+            message = self.players[gid].playlist(interact)
         return message
     
     async def cog_unload(self):

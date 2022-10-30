@@ -438,3 +438,13 @@
     - act only when user and musicbot are in the same voice channel
 - cog MusicBot
   - command stop - call MusicPlayer.stop()
+
+2022/10/30 music-dev branch
+
+- command playlist is done
+- command done: play, pause, stop, playlist
+- command TODO: skip
+- class MusicPlayer
+  - function playlist - list music in queue
+- cog MusicBot
+  - command playlist - call MusicPlayer.playlist()
