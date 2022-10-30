@@ -439,7 +439,7 @@
 - cog MusicBot
   - command stop - call MusicPlayer.stop()
 
-2022/10/30 music-dev branch
+2022/10/30 music-dev branch - 1
 
 - command playlist is done
 - command done: play, pause, stop, playlist
@@ -448,3 +448,9 @@
   - function playlist - list music in queue
 - cog MusicBot
   - command playlist - call MusicPlayer.playlist()
+
+2022/10/30 music-dev branch - 2
+
+- youtube_dl retries 5 times to download (no retry previously)
+- more detailed log information when youtube_dl download error occurred
+- fix bug: playlist won't update when download error occurred

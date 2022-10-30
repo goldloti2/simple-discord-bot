@@ -95,10 +95,12 @@ class MusicPlayer():
                                                 self.ytdl.extract_info,
                                                 result["url"])
             except youtube_dl.utils.DownloadError as e:
-                logger.warning("(MusicPlayer) " + e.args[0])
-                message = f"```{e.args[0]}```"
+                self.music_list.pop(now_dl, False)
+                logger.warning(f"(MusicPlayer) {result['title']} {e.args[0]}")
+                message = f"```{result['title']}\n{e.args[0]}```"
                 await log.send_msg("MusicBot", message, self.tc)
             except:
+                self.music_list.pop(now_dl, False)
                 logger.error("(MusicPlayer) youtube_dl download error")
                 logger.debug("\n", exc_info = True)
                 message = ":x:unexpected download error occured"
@@ -131,6 +133,7 @@ class MusicPlayer():
             try:
                 nowplay = discord.FFmpegPCMAudio(source = result["filename"], **self.ffmpeg_opt)
             except:
+                self.music_list.pop(now_play, False)
                 logger.warning("(MusicPlayer) ffmpeg error")
                 logger.debug("\n", exc_info = True)
                 message = ":x:unexpected ffmpeg error occured"
@@ -141,6 +144,7 @@ class MusicPlayer():
                 self.vc.play(nowplay,
                              after = lambda _: self.loop.call_soon_threadsafe(self.play_end.set))
             except:
+                self.music_list.pop(now_play, False)
                 logger.warning("(MusicPlayer) vc.play error")
                 logger.debug("\n", exc_info = True)
                 message = ":x:unexpected play error occured"
@@ -156,8 +160,8 @@ class MusicPlayer():
                                                    self.ytdl.extract_info,
                                                    search_args, False)
         except youtube_dl.utils.DownloadError as e:
-            err_msg = e.args[0]
-            message = f"```{e.args[0]}```"
+            err_msg = f"{result['title']} {e.args[0]}"
+            message = f"```{result['title']}\n{e.args[0]}```"
             return (message, err_msg)
         except:
             logger.error("(MusicPlayer) youtube_dl error")
@@ -295,6 +299,7 @@ class MusicBot(commands.Cog):
                          "nocheckcertificate": True,
                          "noplaylist": True,
                          "outtmpl": download_path,
+                         "retries": 5,
                          "quiet": True}
         self.ffmpeg_opt = {"executable": FFMpegExe}
         os.makedirs("temp", exist_ok = True)
