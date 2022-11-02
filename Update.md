@@ -454,3 +454,14 @@
 - youtube_dl retries 5 times to download (no retry previously)
 - more detailed log information when youtube_dl download error occurred
 - fix bug: playlist won't update when download error occurred
+
+2022/11/02 music-dev branch
+
+- command skip is done *(tested, but so complicate that might miss some cases)*
+- command done: play, pause, stop, playlist, skip
+- class MusicPlayer
+  - function skip - skip specific music on queue
+  - coroutine download_coro - make download as an awaitable, therefore can get the task and cancel it
+- cog MusicBot
+  - command skip - call MusicPlayer.skip()
+  - command play - add argument description

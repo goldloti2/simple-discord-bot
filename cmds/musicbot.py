@@ -4,6 +4,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from enum import Enum
 import os
+from typing import Optional
 import utils.log as log
 import youtube_dl
 from youtube_dl import YoutubeDL
@@ -65,6 +66,7 @@ class MusicPlayer():
         self.list_cnt = 0
         self.now_play = -1
         self.now_dl = -1
+        self.del_list = set()
         self.is_terminated = False
         self.dl_loop_task = self.loop.create_task(self.download_loop())
         self.pl_loop_task = self.loop.create_task(self.play_loop())
@@ -82,23 +84,33 @@ class MusicPlayer():
         except asyncio.CancelledError:
             logger.debug("(MusicPlayer) play loop cancelled")
     
+    async def download_coro(self, url: str, download: bool = False):
+        return await self.loop.run_in_executor(None,
+                                               self.ytdl.extract_info,
+                                               url, download)
+    
     async def download_loop(self):
         while(1):
             logger.debug("(MusicPlayer) wait download queue")
             now_dl = await self.dl_queue.get()
+            if now_dl in self.del_list:
+                self.del_list.remove(now_dl)
+                logger.debug(f"(MusicPlayer) remove download: #{now_dl}: {result['title']}")
+                continue
             result = self.music_list[now_dl]
             self.now_dl = now_dl
-            logger.debug("(MusicPlayer) download queue get: " + result["title"])
+            logger.debug(f"(MusicPlayer) download queue get: #{now_dl}: {result['title']}")
             self.is_busy.set()
             try:
-                await self.loop.run_in_executor(None,
-                                                self.ytdl.extract_info,
-                                                result["url"])
+                self.dl_task = self.loop.create_task(self.download_coro(result["url"], True))
+                await self.dl_task
             except youtube_dl.utils.DownloadError as e:
                 self.music_list.pop(now_dl, False)
                 logger.warning(f"(MusicPlayer) {result['title']} {e.args[0]}")
                 message = f"```{result['title']}\n{e.args[0]}```"
                 await log.send_msg("MusicBot", message, self.tc)
+            except asyncio.CancelledError:
+                logger.debug(f"(MusicPlayer) #{now_dl}: {result['title']} download has been cancelled")
             except:
                 self.music_list.pop(now_dl, False)
                 logger.error("(MusicPlayer) youtube_dl download error")
@@ -107,13 +119,12 @@ class MusicPlayer():
                 await log.send_msg("MusicBot", message, self.tc)
             else:
                 await self.pl_queue.put(now_dl)
-                logger.debug("(MusicPlayer) downloaded: " + result["title"])
+                logger.debug(f"(MusicPlayer) downloaded: #{now_dl}: {result['title']}")
     
     async def play_loop(self):
         while(1):
             logger.debug("(MusicPlayer) wait is_play")
             await self.play_end.wait()
-            self.play_end.clear()
             logger.debug("(MusicPlayer) wait is_busy")
             try:
                 await asyncio.wait_for(self.is_busy.wait(), 10)
@@ -123,15 +134,21 @@ class MusicPlayer():
                 break
             logger.debug("(MusicPlayer) wait play queue")
             now_play = await self.pl_queue.get()
+            if now_play in self.del_list:
+                self.del_list.remove(now_play)
+                self.play_end.set()
+                logger.debug(f"(MusicPlayer) remove play: #{now_play}: {result['title']}")
+                continue
             result = self.music_list[now_play]
             self.now_play = now_play
-            logger.debug("(MusicPlayer) play queue get: " + result["title"])
-            if self.pl_queue.empty():
+            self.play_end.clear()
+            logger.debug(f"(MusicPlayer) play queue get:  #{now_play}: {result['title']}")
+            if self.pl_queue.empty() and self.dl_task.done():
                 self.is_busy.clear()
                 logger.debug("(MusicPlayer) play queue is empty. is_busy clear")
             await self.is_resume.wait()
             try:
-                nowplay = discord.FFmpegPCMAudio(source = result["filename"], **self.ffmpeg_opt)
+                play_audio = discord.FFmpegPCMAudio(source = result["filename"], **self.ffmpeg_opt)
             except:
                 self.music_list.pop(now_play, False)
                 logger.warning("(MusicPlayer) ffmpeg error")
@@ -140,8 +157,13 @@ class MusicPlayer():
                 await log.send_msg("MusicBot", message, self.tc)
             message = f"now play: `{result['title']}`, in #`{now_play}`"
             await log.send_msg("MusicBot", message, self.tc)
+            if now_play in self.del_list:
+                self.del_list.remove(now_play)
+                self.play_end.set()
+                logger.debug(f"(MusicPlayer) remove play: #{now_play}: {result['title']}")
+                continue
             try:
-                self.vc.play(nowplay,
+                self.vc.play(play_audio,
                              after = lambda _: self.loop.call_soon_threadsafe(self.play_end.set))
             except:
                 self.music_list.pop(now_play, False)
@@ -152,13 +174,12 @@ class MusicPlayer():
     
     async def search_yt(self, search_args: str, requester: str):
         search = False
+        list_cnt = self.list_cnt
         if not search_args.startswith("https://"):
             search_args = "ytsearch:" + search_args
             search = True
         try:
-            info = await self.loop.run_in_executor(None,
-                                                   self.ytdl.extract_info,
-                                                   search_args, False)
+            info = await self.download_coro(search_args, False)
         except youtube_dl.utils.DownloadError as e:
             err_msg = f"{result['title']} {e.args[0]}"
             message = f"```{result['title']}\n{e.args[0]}```"
@@ -178,7 +199,6 @@ class MusicPlayer():
                   "thumbnail": info["thumbnail"],
                   "duration":  info["duration"],
                   "filename":  self.ytdl.prepare_filename(info)}
-        list_cnt = self.list_cnt
         self.music_list[list_cnt] = result
         
         logger.info(f"(MusicPlayer) music in queue #{list_cnt}: " +
@@ -269,6 +289,44 @@ class MusicPlayer():
             message = f":x:bot now playing in `{self.vc.channel}`"
             return (message, err_msg)
     
+    def skip(self, interact: discord.Interaction, pos: Optional[int]):
+        if self.vc != None and self.vc.channel == interact.user.voice.channel:
+            if self.now_play + 1 == self.list_cnt and \
+               not (self.vc.is_playing() or self.vc.is_paused()):
+                message = ":x:no music in queue"
+                return message
+            
+            if pos == None:
+                pos = self.now_play
+                if self.play_end.is_set():
+                    pos += 1
+            
+            if pos < self.now_play or \
+                (pos == self.now_play and self.play_end.is_set()):
+                message = ":x:can't skip already played music"
+            elif pos >= self.list_cnt:
+                message = f":x:#{pos} out of bound"
+            else:
+                del_res = self.music_list.pop(pos, None)
+                if del_res != None:
+                    self.del_list.add(pos)
+                    message = f"skipped: `{del_res['title']}`, in #`{pos}`"
+                    if pos == self.now_play:
+                        self.vc.stop()
+                        if not self.is_resume.is_set():
+                            self.is_resume.set()
+                            if self.vc.is_paused():
+                                self.vc.resume()
+                    elif pos == self.now_dl and not self.dl_task.done():
+                        self.dl_task.cancel()
+                else:
+                    message = f":x:#{pos} already skipped"
+            return message
+        else:
+            err_msg = f"(MusicPlayer) now playing in voice channel:{self.vc.channel}"
+            message = f":x:bot now playing in `{self.vc.channel}`"
+            return (message, err_msg)
+    
     def playlist(self, interact: discord.Interaction):
         if self.vc != None and self.vc.channel == interact.user.voice.channel:
             message = "```\n"
@@ -332,6 +390,7 @@ class MusicBot(commands.Cog):
             return ActiveStatus.USER_INACTIVE, (message, err_msg)
 
     @app_commands.command(description = "Play music from YouTube")
+    @app_commands.describe(search = "search string or url")
     @log.commandlog
     async def play(self, interact: discord.Interaction,
                    search: str):
@@ -362,6 +421,16 @@ class MusicBot(commands.Cog):
         gid = interact.guild_id
         if status == ActiveStatus.ALL_ACTIVE:
             message = await self.players[gid].stop(interact)
+        return message
+
+    @app_commands.command(description = "Skip music in queue")
+    @app_commands.describe(pos = "music going to skip")
+    @log.commandlog
+    async def skip(self, interact: discord.Interaction, pos: Optional[int]):
+        status, message = await self.check_user_player_status(interact)
+        gid = interact.guild_id
+        if status == ActiveStatus.ALL_ACTIVE:
+            message = self.players[gid].skip(interact, pos)
         return message
 
     @app_commands.command(description = "List music in queue")
