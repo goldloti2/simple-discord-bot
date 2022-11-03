@@ -66,7 +66,6 @@ class MusicPlayer():
         self.list_cnt = 0
         self.now_play = -1
         self.now_dl = -1
-        self.del_list = set()
         self.is_terminated = False
         self.dl_loop_task = self.loop.create_task(self.download_loop())
         self.pl_loop_task = self.loop.create_task(self.play_loop())
@@ -93,8 +92,7 @@ class MusicPlayer():
         while(1):
             logger.debug("(MusicPlayer) wait download queue")
             now_dl = await self.dl_queue.get()
-            if now_dl in self.del_list:
-                self.del_list.remove(now_dl)
+            if now_dl not in self.music_list.keys():
                 logger.debug(f"(MusicPlayer) remove download: #{now_dl}: {result['title']}")
                 continue
             result = self.music_list[now_dl]
@@ -134,8 +132,7 @@ class MusicPlayer():
                 break
             logger.debug("(MusicPlayer) wait play queue")
             now_play = await self.pl_queue.get()
-            if now_play in self.del_list:
-                self.del_list.remove(now_play)
+            if now_play not in self.music_list.keys():
                 self.play_end.set()
                 logger.debug(f"(MusicPlayer) remove play: #{now_play}: {result['title']}")
                 continue
@@ -151,14 +148,15 @@ class MusicPlayer():
                 play_audio = discord.FFmpegPCMAudio(source = result["filename"], **self.ffmpeg_opt)
             except:
                 self.music_list.pop(now_play, False)
+                self.play_end.set()
                 logger.warning("(MusicPlayer) ffmpeg error")
                 logger.debug("\n", exc_info = True)
                 message = ":x:unexpected ffmpeg error occured"
                 await log.send_msg("MusicBot", message, self.tc)
+                continue
             message = f"now play: `{result['title']}`, in #`{now_play}`"
             await log.send_msg("MusicBot", message, self.tc)
-            if now_play in self.del_list:
-                self.del_list.remove(now_play)
+            if now_play not in self.music_list.keys():
                 self.play_end.set()
                 logger.debug(f"(MusicPlayer) remove play: #{now_play}: {result['title']}")
                 continue
@@ -167,6 +165,7 @@ class MusicPlayer():
                              after = lambda _: self.loop.call_soon_threadsafe(self.play_end.set))
             except:
                 self.music_list.pop(now_play, False)
+                self.play_end.set()
                 logger.warning("(MusicPlayer) vc.play error")
                 logger.debug("\n", exc_info = True)
                 message = ":x:unexpected play error occured"
@@ -259,14 +258,12 @@ class MusicPlayer():
         if self.vc != None and self.vc.channel == interact.user.voice.channel:
             if self.is_resume.is_set():
                 self.is_resume.clear()
-                if self.vc.is_playing():
-                    self.vc.pause()
+                self.vc.pause()
                 message = ":pause_button: pause"
                 logger.info(f"(MusicPlayer) music pause")
             else:
                 self.is_resume.set()
-                if self.vc.is_paused():
-                    self.vc.resume()
+                self.vc.resume()
                 message = ":arrow_forward: resume"
                 logger.info(f"(MusicPlayer) music resume")
             return message
@@ -279,8 +276,7 @@ class MusicPlayer():
         if self.vc != None and self.vc.channel == interact.user.voice.channel:
             if self.is_resume.is_set():
                 self.is_resume.clear()
-                if self.vc.is_playing():
-                    self.vc.pause()
+                self.vc.pause()
             await self.kill_loop()
             self.init_loop()
             return ":stop_button: stopped"
@@ -309,14 +305,12 @@ class MusicPlayer():
             else:
                 del_res = self.music_list.pop(pos, None)
                 if del_res != None:
-                    self.del_list.add(pos)
                     message = f"skipped: `{del_res['title']}`, in #`{pos}`"
                     if pos == self.now_play:
                         self.vc.stop()
                         if not self.is_resume.is_set():
                             self.is_resume.set()
-                            if self.vc.is_paused():
-                                self.vc.resume()
+                            self.vc.resume()
                     elif pos == self.now_dl and not self.dl_task.done():
                         self.dl_task.cancel()
                 else:
@@ -337,6 +331,8 @@ class MusicPlayer():
                     message += f" {num:2d}) "
                 message += self.music_list[num]["title"]
                 message += f" - requested by {self.music_list[num]['requester']}\n"
+            if len(self.music_list) == 0:
+                message += "no music in queue\n"
             message += "```"
             return message
         else:

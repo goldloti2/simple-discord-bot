@@ -465,3 +465,9 @@
 - cog MusicBot
   - command skip - call MusicPlayer.skip()
   - command play - add argument description
+
+2022/11/03 music-dev branch
+
+- add message when play list is empty
+- reduce some redundant if-statements and variables
+- fix minor bugs: when ffmpeg error or play error occurred, skip and play next
