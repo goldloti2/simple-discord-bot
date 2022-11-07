@@ -471,3 +471,9 @@
 - add message when play list is empty
 - reduce some redundant if-statements and variables
 - fix minor bugs: when ffmpeg error or play error occurred, skip and play next
+
+2022/11/07 music-dev branch
+
+- now can enqueue whole playlist
+  - add coroutine add_dl_queue - push search result to download queue
+- change musicbot timeout interval to 180 sec.

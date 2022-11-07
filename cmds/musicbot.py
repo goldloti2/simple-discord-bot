@@ -4,7 +4,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from enum import Enum
 import os
-from typing import Optional
+from typing import Any, Dict, Optional
 import utils.log as log
 import youtube_dl
 from youtube_dl import YoutubeDL
@@ -125,7 +125,7 @@ class MusicPlayer():
             await self.play_end.wait()
             logger.debug("(MusicPlayer) wait is_busy")
             try:
-                await asyncio.wait_for(self.is_busy.wait(), 10)
+                await asyncio.wait_for(self.is_busy.wait(), 180)
             except asyncio.TimeoutError:
                 logger.debug("(MusicPlayer) play loop timeout")
                 self.loop.create_task(self.terminate())
@@ -171,17 +171,32 @@ class MusicPlayer():
                 message = ":x:unexpected play error occured"
                 await log.send_msg("MusicBot", message, self.tc)
     
+    async def add_dl_queue(self, info: Dict[str, Any], requester: str):
+        list_cnt = self.list_cnt
+        result = {"title":     info["title"],
+                  "url":       info["webpage_url"],
+                  "requester": requester,
+                  "uploader":  info["uploader"],
+                  "thumbnail": info["thumbnail"],
+                  "duration":  info["duration"],
+                  "filename":  self.ytdl.prepare_filename(info)}
+        self.music_list[list_cnt] = result
+        logger.info(f"(MusicPlayer) music in queue #{list_cnt}: " +
+                    result["title"] + ", requested by " +
+                    result["requester"])
+        await self.dl_queue.put(list_cnt)
+        self.list_cnt = list_cnt + 1
+
     async def search_yt(self, search_args: str, requester: str):
         search = False
-        list_cnt = self.list_cnt
         if not search_args.startswith("https://"):
             search_args = "ytsearch:" + search_args
             search = True
         try:
             info = await self.download_coro(search_args, False)
         except youtube_dl.utils.DownloadError as e:
-            err_msg = f"{result['title']} {e.args[0]}"
-            message = f"```{result['title']}\n{e.args[0]}```"
+            err_msg = f"{search_args} {e.args[0]}"
+            message = f"```{e.args[0]}```"
             return (message, err_msg)
         except:
             logger.error("(MusicPlayer) youtube_dl error")
@@ -191,34 +206,36 @@ class MusicPlayer():
         if search:
             info = info["entries"][0]
         
-        result = {"title":     info["title"],
-                  "url":       info["webpage_url"],
-                  "requester": requester,
-                  "uploader":  info["uploader"],
-                  "thumbnail": info["thumbnail"],
-                  "duration":  info["duration"],
-                  "filename":  self.ytdl.prepare_filename(info)}
-        self.music_list[list_cnt] = result
-        
-        logger.info(f"(MusicPlayer) music in queue #{list_cnt}: " +
-                    result["title"] + ", requested by " +
-                    result["requester"])
-        
-        embed = discord.Embed(title = result["title"],
-                              url = result["url"],
-                              description = "Requested by " + result["requester"])
-        embed.set_author(name = result["uploader"])
-        embed.set_thumbnail(url = result["thumbnail"])
-        embed.add_field(name = "Duration",
-                        value = dur2str(result["duration"]),
-                        inline = True)
-        embed.add_field(name = "Queue Position",
-                        value = f"#{list_cnt}",
-                        inline = True)
+        embed = discord.Embed(title = info["title"],
+                              url = info["webpage_url"],
+                              description = "Requested by " + requester)
+        embed.set_author(name = info["uploader"])
         embed.set_footer(text = "may take some time to download")
-
-        await self.dl_queue.put(list_cnt)
-        self.list_cnt = list_cnt + 1
+        if "entries" in info.keys():
+            dur = 0
+            start = self.list_cnt
+            for entry in info["entries"]:
+                dur += entry["duration"]
+                await self.add_dl_queue(entry, requester)
+            embed.set_thumbnail(url = info["entries"][0]["thumbnail"])
+            embed.add_field(name = "Total Duration",
+                            value = dur2str(dur),
+                            inline = True)
+            embed.add_field(name = "Start Position",
+                            value = f"#{start}",
+                            inline = True)
+            embed.add_field(name = "Total in List",
+                            value = len(info["entries"]),
+                            inline = True)
+        else:
+            embed.set_thumbnail(url = info["thumbnail"])
+            embed.add_field(name = "Duration",
+                            value = dur2str(info["duration"]),
+                            inline = True)
+            embed.add_field(name = "Queue Position",
+                            value = f"#{self.list_cnt}",
+                            inline = True)
+            await self.add_dl_queue(info, requester)
         return {"embed": embed}
     
     async def new_play(self, interact: discord.Interaction, search: str):
@@ -351,7 +368,7 @@ class MusicBot(commands.Cog):
         self.ytdl_opt = {"format": "bestaudio",
                          "logger": log.get_logger("ytdl"),
                          "nocheckcertificate": True,
-                         "noplaylist": True,
+                         "noplaylist": False,
                          "outtmpl": download_path,
                          "retries": 5,
                          "quiet": True}
