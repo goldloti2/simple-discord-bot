@@ -477,3 +477,8 @@
 - now can enqueue whole playlist
   - add coroutine add_dl_queue - push search result to download queue
 - change musicbot timeout interval to 180 sec.
+
+2022/12/22
+
+- cmd/musicbot.py
+  - add messages to suggest user reload musicbot when error occured
