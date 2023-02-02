@@ -482,3 +482,11 @@
 
 - cmd/musicbot.py
   - add messages to suggest user reload musicbot when error occured
+
+2023/02/02
+
+- main.py
+- cmd/misc.py
+  - command ping - show version info
+- cmd/musicbot.py
+  - reload musicbot messages more precise

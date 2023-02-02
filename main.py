@@ -13,6 +13,7 @@ setting = load_json()
 bot = commands.Bot(command_prefix = setting["PREFIX"],
                    intents = discord.Intents.all())
 bot.setting = setting
+bot.version = "v.2.2.230202"
 
 
 @bot.event

@@ -22,8 +22,7 @@ class Misc(commands.Cog):
     @log.commandlog
     async def ping(self, interact: discord.Interaction):
         message = f"{self.bot.latency * 1000:.3f} ms, "
-        message = message + f"{interact.channel}@<#{interact.channel.id}>"
-        message = message + f"(\\#{interact.channel.id})\n"
+        message = message + f"@<#{interact.channel.id}>-{self.bot.version}\n"
         return message
     
     '''

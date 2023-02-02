@@ -113,7 +113,7 @@ class MusicPlayer():
                 self.music_list.pop(now_dl, False)
                 logger.error("(MusicPlayer) youtube_dl download error")
                 logger.debug("\n", exc_info = True)
-                message = ":x:unexpected download error occured. Try \"/reload musicbot\" and do it again."
+                message = ":x:unexpected download error occured. Try \"/cog-core reload musicbot\" and do it again."
                 await log.send_msg("MusicBot", message, self.tc)
             else:
                 await self.pl_queue.put(now_dl)
@@ -151,7 +151,7 @@ class MusicPlayer():
                 self.play_end.set()
                 logger.warning("(MusicPlayer) ffmpeg error")
                 logger.debug("\n", exc_info = True)
-                message = ":x:unexpected ffmpeg error occured. Try \"/reload musicbot\" and do it again."
+                message = ":x:unexpected ffmpeg error occured. Try \"/cog-core reload musicbot\" and do it again."
                 await log.send_msg("MusicBot", message, self.tc)
                 continue
             message = f"now play: `{result['title']}`, in #`{now_play}`"
@@ -168,7 +168,7 @@ class MusicPlayer():
                 self.play_end.set()
                 logger.warning("(MusicPlayer) vc.play error")
                 logger.debug("\n", exc_info = True)
-                message = ":x:unexpected play error occured. Try \"/reload musicbot\" and do it again."
+                message = ":x:unexpected play error occured. Try \"/cog-core reload musicbot\" and do it again."
                 await log.send_msg("MusicBot", message, self.tc)
     
     async def add_dl_queue(self, info: Dict[str, Any], requester: str):
@@ -201,7 +201,7 @@ class MusicPlayer():
         except:
             logger.error("(MusicPlayer) youtube_dl error")
             logger.debug("\n", exc_info = True)
-            message = ":x:unexpected error occured. Try \"/reload musicbot\" and do it again."
+            message = ":x:unexpected error occured. Try \"/cog-core reload musicbot\" and do it again."
             return message
         if search:
             info = info["entries"][0]
@@ -253,7 +253,7 @@ class MusicPlayer():
             except:
                 logger.error("(MusicPlayer) voice channel connection error.")
                 logger.debug("\n", exc_info = True)
-                err_msg = "(MusicPlayer) voice channel connection error. Try \"/reload musicbot\" and do it again."
+                err_msg = "(MusicPlayer) voice channel connection error. Try \"/cog-core reload musicbot\" and do it again."
                 message = ":x:connection error"
                 return (message, err_msg)
             else:
