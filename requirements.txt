@@ -1,4 +1,4 @@
 discord.py[voice]
 httpx
-youtube_dl
+yt_dlp
 pyNaCl

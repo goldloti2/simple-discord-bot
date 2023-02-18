@@ -6,8 +6,8 @@ from enum import Enum
 import os
 from typing import Any, Dict, Optional
 import utils.log as log
-import youtube_dl
-from youtube_dl import YoutubeDL
+import yt_dlp
+from yt_dlp import YoutubeDL
 
 FFMpegExe = ".\\env\\ffmpeg.exe"
 download_path = os.path.join(".", "temp", "%(title)s.%(ext)s")
@@ -102,7 +102,7 @@ class MusicPlayer():
             try:
                 self.dl_task = self.loop.create_task(self.download_coro(result["url"], True))
                 await self.dl_task
-            except youtube_dl.utils.DownloadError as e:
+            except yt_dlp.utils.DownloadError as e:
                 self.music_list.pop(now_dl, False)
                 logger.warning(f"(MusicPlayer) {result['title']} {e.args[0]}")
                 message = f"```{result['title']}\n{e.args[0]}```"
@@ -111,7 +111,7 @@ class MusicPlayer():
                 logger.debug(f"(MusicPlayer) #{now_dl}: {result['title']} download has been cancelled")
             except:
                 self.music_list.pop(now_dl, False)
-                logger.error("(MusicPlayer) youtube_dl download error")
+                logger.error("(MusicPlayer) yt_dlp download error")
                 logger.debug("\n", exc_info = True)
                 message = ":x:unexpected download error occured. Try \"/cog-core reload musicbot\" and do it again."
                 await log.send_msg("MusicBot", message, self.tc)
@@ -194,12 +194,12 @@ class MusicPlayer():
             search = True
         try:
             info = await self.download_coro(search_args, False)
-        except youtube_dl.utils.DownloadError as e:
+        except yt_dlp.utils.DownloadError as e:
             err_msg = f"{search_args} {e.args[0]}"
             message = f"```{e.args[0]}```"
             return (message, err_msg)
         except:
-            logger.error("(MusicPlayer) youtube_dl error")
+            logger.error("(MusicPlayer) yt_dlp error")
             logger.debug("\n", exc_info = True)
             message = ":x:unexpected error occured. Try \"/cog-core reload musicbot\" and do it again."
             return message

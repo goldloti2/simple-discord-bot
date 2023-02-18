@@ -490,3 +490,7 @@
   - command ping - show version info
 - cmd/musicbot.py
   - reload musicbot messages more precise
+
+2023/02/18
+
+- replace package **youtube_dl** with **yt_dlp**
