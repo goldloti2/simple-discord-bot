@@ -494,3 +494,7 @@
 2023/02/18
 
 - replace package **youtube_dl** with **yt_dlp**
+
+2023/04/25
+
+- change ytdl request format to get niconico video

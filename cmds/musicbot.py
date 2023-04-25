@@ -365,7 +365,7 @@ class MusicBot(commands.Cog):
         self.bot = bot
 
         '''yt_dl & ffmpeg option'''
-        self.ytdl_opt = {"format": "bestaudio",
+        self.ytdl_opt = {"format": "ba/ba*",
                          "logger": log.get_logger("ytdl"),
                          "nocheckcertificate": True,
                          "noplaylist": False,
