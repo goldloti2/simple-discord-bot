@@ -343,8 +343,12 @@ class MusicPlayer():
         if self.vc != None and self.vc.channel == interact.user.voice.channel:
             message = "```\n"
             for num in self.music_list.keys():
+                if self.now_dl == num:
+                    message += "* "
+                else:
+                    message += "  "
                 if self.now_play == num:
-                    message += f"*{num:2d}) "
+                    message += f">{num:2d}) "
                 else:
                     message += f" {num:2d}) "
                 message += self.music_list[num]["title"]

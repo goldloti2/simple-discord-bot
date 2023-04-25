@@ -504,3 +504,10 @@
 - cmd/musicbot.py
   - fix niconico video can't play
     - duration of niconico video is `float`
+
+2023/04/25 - 3
+
+- cmd/musicbot.py
+  - playlist marks change
+    - `*` now marked as now downloading/download finish
+    - `>` marked as now playing
