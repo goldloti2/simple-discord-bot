@@ -4,7 +4,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from enum import Enum
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 import utils.log as log
 import yt_dlp
 from yt_dlp import YoutubeDL
@@ -14,7 +14,8 @@ download_path = os.path.join(".", "temp", "%(title)s.%(ext)s")
 
 logger = log.get_logger()
 
-def dur2str(duration: int):
+def dur2str(duration: Union[int, float]):
+    duration = int(round(duration, 0))
     sec = duration % 60
     min = duration // 60 % 60
     hr = duration // 3600

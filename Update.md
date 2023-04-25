@@ -495,6 +495,12 @@
 
 - replace package **youtube_dl** with **yt_dlp**
 
-2023/04/25
+2023/04/25 - 1
 
 - change ytdl request format to get niconico video
+
+2023/04/25 - 2
+
+- cmd/musicbot.py
+  - fix niconico video can't play
+    - duration of niconico video is `float`
