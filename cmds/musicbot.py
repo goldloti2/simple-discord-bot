@@ -10,7 +10,7 @@ import yt_dlp
 from yt_dlp import YoutubeDL
 
 FFMpegExe = ".\\env\\ffmpeg.exe"
-download_path = os.path.join(".", "temp", "%(title)s.%(ext)s")
+download_path = os.path.join(".", "temp", "%(title)s-%(uploader)s.%(ext)s")
 
 logger = log.get_logger()
 

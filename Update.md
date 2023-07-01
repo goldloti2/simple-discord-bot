@@ -233,7 +233,7 @@
     - no argument now, since slash commands don't allow ambiguous arguments
   - rework slash command - change_game
     - no command error, since slash commands don't support
-- cmd/test.py
+- cmds/test.py
   - modify slash command - pong, pong2
     - add description
 - utils/log.py
@@ -260,7 +260,7 @@
 
 2022/09/14 dev branch - 3
 
-- cmd/twitter.py
+- cmds/twitter.py
   - rework slash command - subscribe, subscription, update, delete
     - subscribe combine old commands: subscribe_user and subscribe_search
     - subscription rename from subscribed
@@ -274,7 +274,7 @@
 
 2022/10/20 music-dev branch, merge from old-music-dev branch (done in 2021/12/05)
 
-- cmd/musicbot.py
+- cmds/musicbot.py
   - Function is_connected() - done
   - Function search_yt() - done
   - Function play_next() - self.vc.play() cannot play the music
@@ -285,7 +285,7 @@
 
 2022/10/20 music-dev branch - 2
 
-- rework cmd/musicbot.py
+- rework cmds/musicbot.py
   - Function is_connected - done
   - Command play - now can connect to voice channel
   - Command stop - temporary for disconnect from voice channel
@@ -293,23 +293,23 @@
 
 2022/10/21 music-dev branch - 1
 
-- rework cmd/musicbot.py
+- rework cmds/musicbot.py
   - Coroutine inactive_timer - done, sleep time needs to change when in actual use
 
 2022/10/21 music-dev branch - 2
 
-- rework cmd/musicbot.py
+- rework cmds/musicbot.py
   - Function search_yt - done
   - some style correction
 
 2022/10/23 music-dev branch - 1
 
-- rework cmd/musicbot.py
+- rework cmds/musicbot.py
   - cog_unload - done
 
 2022/10/23 music-dev branch - 2
 
-- rework cmd/musicbot.py
+- rework cmds/musicbot.py
   - Function search_yt - can download music
   - Function play_next - can play one music per time
 - known bugs
@@ -480,15 +480,15 @@
 
 2022/12/22
 
-- cmd/musicbot.py
+- cmds/musicbot.py
   - add messages to suggest user reload musicbot when error occured
 
 2023/02/02
 
 - main.py
-- cmd/misc.py
+- cmds/misc.py
   - command ping - show version info
-- cmd/musicbot.py
+- cmds/musicbot.py
   - reload musicbot messages more precise
 
 2023/02/18
@@ -501,13 +501,21 @@
 
 2023/04/25 - 2
 
-- cmd/musicbot.py
+- cmds/musicbot.py
   - fix niconico video can't play
     - duration of niconico video is `float`
 
 2023/04/25 - 3
 
-- cmd/musicbot.py
+- cmds/musicbot.py
   - playlist marks change
     - `*` now marked as now downloading/download finish
     - `>` marked as now playing
+
+2023/07/01
+
+- cmds/musicbot.py
+  - fix download file name may be the same by adding uploader at the end of the name
+- correct "cmd/" to "cmds/" in Update.md
+- move cmds/twitter.py to cmds/legacy
+  - fXXk Elon Musk, no more free twitter bot
