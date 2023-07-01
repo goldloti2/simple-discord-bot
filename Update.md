@@ -511,3 +511,8 @@
   - playlist marks change
     - `*` now marked as now downloading/download finish
     - `>` marked as now playing
+
+2023/07/01
+
+- cmd/musicbot.py
+  - fix download file name may be the same by adding uploader at the end of the name
