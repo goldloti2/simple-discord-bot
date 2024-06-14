@@ -36,7 +36,7 @@ class Ruletka(commands.GroupCog):
             message = self._shot(channel)
         else:
             logger.info(f"(Ruletka) miss shot @{interact.channel.name}")
-            message = ":sayonarashark::boom:"
+            message = "<:sayonarashark:1068783540096999454>:boom:"
         return message
     
     def _new_game(self, magazine: Optional[int], shots: Optional[int]):
@@ -54,10 +54,10 @@ class Ruletka(commands.GroupCog):
             self.games[channel][1] -= 1
             if self.games[channel][1] == 0:
                 del self.games[channel]
-            return ":Isthataliedog:"
+            return "<:Isthataliedog:1062207082520117268>"
         # not get shot
         else:
-            return ":confidencedog:"
+            return "<:confidencedog:1063331443184521256>"
 
 
 async def setup(bot: commands.Bot):
