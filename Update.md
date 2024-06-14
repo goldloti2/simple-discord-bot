@@ -519,3 +519,8 @@
 - correct "cmd/" to "cmds/" in Update.md
 - move cmds/twitter.py to cmds/legacy
   - fXXk Elon Musk, no more free twitter bot
+
+2024/06/14
+
+- cmds/ruletka.py
+  - add russian ruletka cog, for fun
